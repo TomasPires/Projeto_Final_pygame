@@ -17,13 +17,12 @@ clock = pygame.time.Clock()
 class Char(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('props/characters/front/char0.0-96x96.png').convert_alpha()
+        self.image = pygame.image.load('Pixel_TreasuresandBurial/props/characters/front/char0.0-96x96.png').convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH/2,HEIGHT/2)
         self.x_speed = 0
         self.y_speed = 0
-
     def update(self):
         self.rect.x += self.x_speed
         self.rect.y += self.y_speed
