@@ -6,6 +6,13 @@ WIDTH = 1080
 HEIGHT = 720
 FPS = 30
 
+WHITE = (255,255,255)
+GREEN = (0,255,0)
+BLUE = (0,0,255)
+RED = (255,0,0)
+BLACK = (0,0,0)
+
+MAPA = GREEN #Variável para mudança de mapas conforme o movimento do personagem (teste com cores)
 #Iniciando o PyGame, algumas funções e criando a janela
 pygame.init()
 pygame.mixer.init()
@@ -35,8 +42,6 @@ class Char(pygame.sprite.Sprite):
         if self.rect.bottom > HEIGHT:
             self.rect.bottom = HEIGHT
         
-        
-
 #grupos das sprites
 all_sprites = pygame.sprite.Group() 
 player = Char()
@@ -69,9 +74,16 @@ while gamerun:
             if event.key == pygame.K_DOWN:
                 player.y_speed -=5
     
+    if player.rect.right >= (WIDTH)-100:
+        if (HEIGHT/2)-50<player.rect.bottom<(HEIGHT/2+50):
+            MAPA = BLACK
+    else:
+        MAPA = GREEN
+            
     all_sprites.update()
-
-    window.fill((255,255,255)) #Depois, podemos usar o comando pygame.display.flip()
+   
+    window.fill(MAPA) #Depois, podemos usar o comando pygame.display.flip()
+    pygame.draw.circle(window, BLUE,(980,360),10)
     all_sprites.draw(window)
 
     pygame.display.update()
