@@ -6,6 +6,13 @@ WIDTH = 1080
 HEIGHT = 720
 FPS = 30
 
+WHITE = (255,255,255)
+GREEN = (0,255,0)
+BLUE = (0,0,255)
+RED = (255,0,0)
+BLACK = (0,0,0)
+
+MAPA = GREEN #Variável para mudança de mapas conforme o movimento do personagem (teste com cores)
 #Iniciando o PyGame, algumas funções e criando a janela
 pygame.init()
 pygame.mixer.init()
@@ -17,13 +24,12 @@ clock = pygame.time.Clock()
 class Char(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('props/characters/front/char0.0-96x96.png').convert_alpha()
+        self.image = pygame.image.load('Pixel_TreasuresandBurial/props/characters/front/char0.0-96x96.png').convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH/2,HEIGHT/2)
         self.x_speed = 0
         self.y_speed = 0
-
     def update(self):
         self.rect.x += self.x_speed
         self.rect.y += self.y_speed
@@ -36,8 +42,6 @@ class Char(pygame.sprite.Sprite):
         if self.rect.bottom > HEIGHT:
             self.rect.bottom = HEIGHT
         
-        
-
 #grupos das sprites
 all_sprites = pygame.sprite.Group() 
 player = Char()
@@ -70,9 +74,16 @@ while gamerun:
             if event.key == pygame.K_DOWN:
                 player.y_speed -=5
     
+    if player.rect.right >= (WIDTH)-100:
+        if (HEIGHT/2)-50<player.rect.bottom<(HEIGHT/2+50):
+            MAPA = BLACK
+    else:
+        MAPA = GREEN
+            
     all_sprites.update()
-
-    window.fill((255,255,255)) #Depois, podemos usar o comando pygame.display.flip()
+   
+    window.fill(MAPA) #Depois, podemos usar o comando pygame.display.flip()
+    pygame.draw.circle(window, BLUE,(980,360),10)
     all_sprites.draw(window)
 
     pygame.display.update()
