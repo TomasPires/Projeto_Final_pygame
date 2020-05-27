@@ -27,6 +27,7 @@ def load_assets():
     assets = {}
     assets['flecha_img'] = pygame.image.load('assets/img/background.png').convert()
     assets['character_img'] = pygame.image.load('Pixel_TreasuresandBurial/props/characters/front/char0.0-96x96.png').convert_alpha()
+    return assets
     
 #Classes
 class Char(pygame.sprite.Sprite):
