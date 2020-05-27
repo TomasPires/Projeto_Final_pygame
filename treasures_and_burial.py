@@ -27,7 +27,11 @@ def load_assets():
     assets = {}
     assets['flecha_img'] = pygame.image.load('assets/img/background.png').convert()
     assets['character_img'] = pygame.image.load('Pixel_TreasuresandBurial/props/characters/front/char0.0-96x96.png').convert_alpha()
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 9447c14525766008bd647ac4b0786d9496894379
 #Classes
 class Char(pygame.sprite.Sprite):
     def __init__(self, groups, assets):
@@ -104,10 +108,17 @@ def janela(window):
     groups = {}
     groups['all_sprites'] = all_sprites
     groups['all_flechas'] = all_flechas
+<<<<<<< HEAD
 
     player = Char(groups, assets)
     all_sprites.add(player)
     assets = load_assets()
+=======
+    assets = load_assets()
+    player = Char(groups, assets)
+    all_sprites.add(player)
+    
+>>>>>>> 9447c14525766008bd647ac4b0786d9496894379
 
     #Loop principal
     gamerun = True
@@ -149,5 +160,10 @@ def janela(window):
         all_sprites.draw(window)
 
         pygame.display.update()
+<<<<<<< HEAD
+=======
+        
+janela(window)
+>>>>>>> 9447c14525766008bd647ac4b0786d9496894379
 
 pygame.quit()
