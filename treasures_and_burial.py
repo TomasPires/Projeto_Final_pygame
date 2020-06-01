@@ -25,7 +25,7 @@ clock = pygame.time.Clock()
 
 def load_assets():
     assets = {}
-    assets['flecha_img'] = pygame.image.load('assets/img/background.png').convert()
+    assets['flecha_img'] = pygame.image.load('Pixel_TreasuresandBurial/props/objects/projectiles/arrow-16x16.png').convert_alpha()
     assets['character_img'] = pygame.image.load('Pixel_TreasuresandBurial/props/characters/front/char0.0-96x96.png').convert_alpha()
     return assets
     
@@ -64,7 +64,7 @@ class Char(pygame.sprite.Sprite):
         if self.rect.bottom > HEIGHT:
             self.rect.bottom = HEIGHT
 
-    def tirobaixo(self):
+    def shoot(self):
         # Verifica se pode atirar
         now = pygame.time.get_ticks()
         # Verifica quantos ticks se passaram desde o último tiro.
@@ -75,20 +75,20 @@ class Char(pygame.sprite.Sprite):
             # Marca o tick da nova imagem.
             self.last_shot = now
             # A nova bala vai ser criada logo acima e no centro horizontal da nave
-            new_bullet = Bullet(self.assets, self.rect.centery, self.rect.centerx)
+            new_bullet = Flecha(self.assets, self.rect.centery, self.rect.centerx)
             self.groups['all_sprites'].add(new_bullet)
-            self.groups['all_bullets'].add(new_bullet)
+            self.groups['all_flechas'].add(new_bullet)
 
 class Flecha(pygame.sprite.Sprite):
     def __init__(self,assets,bottom,centerx):
         pygame.sprite.Sprite.__init__(self)
 
         self.image = assets['flecha_img']
-        self.mask=pygame.mask.from_window
+        self.mask=pygame.mask.from_surface(self.image)
         self.rect=self.image.get_rect()
         self.rect.centerx = centerx
         self.rect.bottom = bottom
-        self.speedy = -10
+        self.speedy = -10 
 
     def update(self):
         # A bala só se move no eixo y
@@ -127,6 +127,8 @@ def janela(window):
                     player.y_speed -=5
                 if event.key == pygame.K_DOWN:
                     player.y_speed +=5
+                if event.key == pygame.K_SPACE:
+                    player.shoot()
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     player.x_speed +=5
