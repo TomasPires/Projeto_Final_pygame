@@ -88,7 +88,6 @@ class Char(pygame.sprite.Sprite):
         self.groups = groups
         self.assets = assets
 
-        # Só será possível atirar uma vez a cada 500 milissegundos
         self.last_shot = pygame.time.get_ticks()
         self.shoot_ticks = 500
 
@@ -108,16 +107,10 @@ class Char(pygame.sprite.Sprite):
             self.rect.bottom = HEIGHT
 
     def shoot(self):
-        # Verifica se pode atirar
         now = pygame.time.get_ticks()
-        # Verifica quantos ticks se passaram desde o último tiro.
         elapsed_ticks = now - self.last_shot
-
-        # Se já pode atirar novamente...
         if elapsed_ticks > self.shoot_ticks:
-            # Marca o tick da nova imagem.
             self.last_shot = now
-            # A nova bala vai ser criada logo acima e no centro horizontal da nave
             nova_flecha = Flecha(self.assets, self.rect.centery, self.rect.centerx)
             self.groups['all_sprites'].add(nova_flecha)
             self.groups['all_flechas'].add(nova_flecha)
@@ -139,26 +132,64 @@ class Flecha(pygame.sprite.Sprite):
         self.angle = degrees(angle)
         self.speedx = cos(angle)*self.speed
         self.speedy = sin(angle)*self.speed 
+        self.image = pygame.transform.rotate(self.image,(self.angle-45))
+        self.assets = assets
+
 
     def update(self):
-        # A bala só se move no eixo y
         self.rect.y += self.speedy
         self.rect.x += self.speedx
-        # Se o tiro passar do inicio da tela, morre.
         if self.rect.bottom < 0:
             self.kill()
+
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self,groups,assets,player):
+        n = random.randint(0,4)
+        self.assets = assets
+        self.image = self.assets['elementals'][n]
+        self.groups = groups
+        self.rect = self.image.get_rect()
+        self.rect.centerx = 550
+        self.rect.centery = HEIGHT/2
+        self.speed = 0
+        distax = player.rect.centerx - self.rect.centerx
+        distay = player.rect.centery - self.rect.centery
+        angle = atan2(distay,distax)
+        self.angle = degrees(angle)
+        self.speedx = cos(angle)*self.speed
+        self.speedy = sin(angle)*self.speed
+        self.groups = groups
+        self.assets = assets
+
+
+    def update(self):
+        if self.rect.right > WIDTH:
+            self.rect.right = WIDTH
+            self.speed = 0
+        if self.rect.left < 0:
+            self.rect.left = 0
+            self.speed = 0
+        if self.rect.top < 0:
+            self.rect.top = 0
+            self.speed = 0
+        if self.rect.bottom > HEIGHT:
+            self.rect.bottom = HEIGHT
+            self.speed = 0
 
 def janela(window):        
     #grupos das sprites
     all_sprites = pygame.sprite.Group()
     all_flechas = pygame.sprite.Group()
+    all_enemies = pygame.sprite.Group()
     groups = {}
     groups['all_sprites'] = all_sprites
     groups['all_flechas'] = all_flechas
+    groups['all_enemies'] = all_enemies
     assets = load_assets()
     player = Char(groups, assets)
+    enemy = Enemy(groups,assets,player)
     all_sprites.add(player)
-    
 
     #Loop principal
     gamerun = True
@@ -190,12 +221,15 @@ def janela(window):
                     player.y_speed -=5
                 
             if event.type == pygame.MOUSEMOTION:
-                mouse = list(pygame.mouse.get_pos())  ###
+                mouse = list(pygame.mouse.get_pos())
                 print(mouse) 
 
         if player.rect.right >= (WIDTH)-100:
             if (HEIGHT/2)-50<player.rect.bottom<(HEIGHT/2+50):
                 MAPA = BLACK
+                player.kill()
+                player = Char(groups,assets)
+                all_sprites.add(player)
         else:
             MAPA = GREEN
                 
@@ -204,7 +238,8 @@ def janela(window):
         window.fill(MAPA) #Depois, podemos usar o comando pygame.display.flip()
         all_sprites.draw(window)
         all_flechas.draw(window)
-        pygame.draw.circle(window, BLUE,(400,360),10) ###
+        all_enemies.draw(window)
+        pygame.draw.circle(window, BLUE,(550,250),10)
         pygame.display.update()
         
 janela(window)
