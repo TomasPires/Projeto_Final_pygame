@@ -71,7 +71,7 @@ def load_assets():
         elementals.append(img)
     assets['elementals'] = elementals
     return assets
-    
+
 #Classes
 class Char(pygame.sprite.Sprite):
     def __init__(self, groups, assets):
