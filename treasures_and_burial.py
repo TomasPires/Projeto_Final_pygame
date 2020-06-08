@@ -182,7 +182,7 @@ class Flecha(pygame.sprite.Sprite):
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self,groups,assets,player):
-        n = random.randint(0,3)
+        n = random.randint(0,4)
         self.assets = assets
         self.image = self.assets['elementals'][n]
         self.groups = groups
@@ -274,12 +274,13 @@ def janela(window):
 
         if player.rect.right >= (WIDTH)-100:
             if (HEIGHT/2)-50<player.rect.bottom<(HEIGHT/2+50):
+
                 MAPA = assets['mapas']
                 player.kill()
                 player = Char(groups,assets)
                 player.rect.centerx = 0
                 all_sprites.add(player)
-                
+
         else:
             MAPA = assets['mapas']
             x = 0   
@@ -289,7 +290,10 @@ def janela(window):
         if in_water:
             player.x_speed = 0
             player.y_speed = 0
-
+      
+        else:
+            MAPA = assets['mapas']
+            x = 0    
         all_sprites.update()
     
         window.blit(MAPA,(0,0)) #Depois, podemos usar o comando pygame.display.flip()
