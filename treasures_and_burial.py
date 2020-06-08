@@ -153,7 +153,11 @@ class Flecha(pygame.sprite.Sprite):
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self,groups,assets,player):
+<<<<<<< HEAD
         n = random.randint(0,3)
+=======
+        n = random.randint(0,4)
+>>>>>>> 609c1cf0620b418c931a158c21ca8d03ab34d9d8
         self.assets = assets
         self.image = self.assets['elementals'][n]
         self.groups = groups
@@ -234,11 +238,20 @@ def janela(window):
 
         if player.rect.right >= (WIDTH)-100:
             if (HEIGHT/2)-50<player.rect.bottom<(HEIGHT/2+50):
+<<<<<<< HEAD
                 MAPA = assets['mapas']
                 player.kill()
                 player = Char(groups,assets)
                 player.rect.centerx = 0
                 all_sprites.add(player)
+=======
+                MAPA = BLACK
+                player.kill()
+                player = Char(groups,assets)
+                all_sprites.add(player)
+        else:
+            MAPA = GREEN
+>>>>>>> 609c1cf0620b418c931a158c21ca8d03ab34d9d8
                 
         else:
             MAPA = assets['mapas']
