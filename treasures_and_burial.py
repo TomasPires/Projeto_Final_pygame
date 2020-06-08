@@ -12,8 +12,6 @@ BLUE = (0,0,255)
 RED = (255,0,0)
 BLACK = (0,0,0)
 
-MAPA = GREEN #Variável para mudança de mapas conforme o movimento do personagem (teste com cores)
-#Iniciando o PyGame, algumas funções e criando a janela
 pygame.init()
 pygame.mixer.init()
 
@@ -26,7 +24,16 @@ clock = pygame.time.Clock()
 def load_assets():
     assets = {}
     assets['flecha_img'] = pygame.image.load('Pixel_TreasuresandBurial/props/objects/projectiles/arrow-16x16.png').convert_alpha()
-    assets['character_img'] = pygame.image.load('Pixel_TreasuresandBurial/props/characters/front/char0.0-96x96.png').convert_alpha()
+    assets['character_img'] = pygame.image.load('Pixel_TreasuresandBurial/props/characters/front/char0.0-96x96.png').convert()
+    assets['init_screen'] = pygame.image.load('Pixel_TreasuresandBurial/img/introscreen-500x400.png').convert()
+    assets['init_screen'] = pygame.transform.scale(assets['init_screen'], (WIDTH,HEIGHT))
+    over_anim = []
+    for i in range(1,3):
+        filename = 'Pixel_TreasuresandBurial/img/gameover{0}.png'.format(i)
+        img = pygame.image.load(filename).convert()
+        img = pygame.transform.scale(img,(WIDTH,HEIGHT))
+        over_anim.append(img)
+    assets['over_screen'] = over_anim    
     anim_right = []
     anim_left = []
     anim_front = []
@@ -70,6 +77,7 @@ def load_assets():
         img = pygame.transform.scale(img,(32,32))
         elementals.append(img)
     assets['elementals'] = elementals
+    assets['mapas'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa3.1.png').convert()
     return assets
 
 #Classes
@@ -83,19 +91,18 @@ class Char(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH/2
         self.rect.centery = HEIGHT/2
-        self.x_speed = 0
-        self.y_speed = 0
+        self.delta = {"esquerda":0,"direita":0,"acima":0,"abaixo":0}
+        self.velo = 5
         self.groups = groups
         self.assets = assets
 
-        # Só será possível atirar uma vez a cada 500 milissegundos
         self.last_shot = pygame.time.get_ticks()
         self.shoot_ticks = 500
 
     def update(self):
 
-        self.rect.x += self.x_speed
-        self.rect.y += self.y_speed
+        self.rect.x += (self.delta["direita"]-self.delta["esquerda"])*self.velo
+        self.rect.y += (self.delta["abaixo"]-self.delta["acima"])*self.velo
 
 
         if self.rect.right > WIDTH:
@@ -108,16 +115,10 @@ class Char(pygame.sprite.Sprite):
             self.rect.bottom = HEIGHT
 
     def shoot(self):
-        # Verifica se pode atirar
         now = pygame.time.get_ticks()
-        # Verifica quantos ticks se passaram desde o último tiro.
         elapsed_ticks = now - self.last_shot
-
-        # Se já pode atirar novamente...
         if elapsed_ticks > self.shoot_ticks:
-            # Marca o tick da nova imagem.
             self.last_shot = now
-            # A nova bala vai ser criada logo acima e no centro horizontal da nave
             nova_flecha = Flecha(self.assets, self.rect.centery, self.rect.centerx)
             self.groups['all_sprites'].add(nova_flecha)
             self.groups['all_flechas'].add(nova_flecha)
@@ -136,29 +137,67 @@ class Flecha(pygame.sprite.Sprite):
         distx = mouse[0] - self.rect.centerx
         disty = mouse[1] - self.rect.centery
         angle = atan2(disty,distx)
-        self.angle = degrees(angle)
+        self.angle = degrees(-angle)
         self.speedx = cos(angle)*self.speed
         self.speedy = sin(angle)*self.speed 
+        self.image = pygame.transform.rotate(self.image,(self.angle-45))
+        self.assets = assets
+
 
     def update(self):
-        # A bala só se move no eixo y
         self.rect.y += self.speedy
         self.rect.x += self.speedx
-        # Se o tiro passar do inicio da tela, morre.
         if self.rect.bottom < 0:
             self.kill()
+
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self,groups,assets,player):
+        n = random.randint(0,3)
+        self.assets = assets
+        self.image = self.assets['elementals'][n]
+        self.groups = groups
+        self.rect = self.image.get_rect()
+        self.rect.centerx = 550
+        self.rect.centery = HEIGHT/2
+        self.speed = 0
+        distax = player.rect.centerx - self.rect.centerx
+        distay = player.rect.centery - self.rect.centery
+        angle = atan2(distay,distax)
+        self.angle = degrees(angle)
+        self.speedx = cos(angle)*self.speed
+        self.speedy = sin(angle)*self.speed
+        self.groups = groups
+        self.assets = assets
+
+
+    def update(self):
+        if self.rect.right > WIDTH:
+            self.rect.right = WIDTH
+            self.speed = 0
+        if self.rect.left < 0:
+            self.rect.left = 0
+            self.speed = 0
+        if self.rect.top < 0:
+            self.rect.top = 0
+            self.speed = 0
+        if self.rect.bottom > HEIGHT:
+            self.rect.bottom = HEIGHT
+            self.speed = 0
 
 def janela(window):        
     #grupos das sprites
     all_sprites = pygame.sprite.Group()
     all_flechas = pygame.sprite.Group()
+    all_enemies = pygame.sprite.Group()
     groups = {}
     groups['all_sprites'] = all_sprites
     groups['all_flechas'] = all_flechas
+    groups['all_enemies'] = all_enemies
     assets = load_assets()
     player = Char(groups, assets)
+    enemy = Enemy(groups,assets,player)
     all_sprites.add(player)
-    
 
     #Loop principal
     gamerun = True
@@ -170,41 +209,47 @@ def janela(window):
                 gamerun = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
-                    player.x_speed -=5
+                    player.delta["esquerda"] =1
                 if event.key == pygame.K_d:
-                    player.x_speed +=5
+                    player.delta["direita"] =1
                 if event.key == pygame.K_w:
-                    player.y_speed -=5
+                    player.delta["acima"] =1
                 if event.key == pygame.K_s:
-                    player.y_speed +=5
+                    player.delta["abaixo"] =1
                 if event.key == pygame.K_SPACE:
                     player.shoot()
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_a:
-                    player.x_speed +=5
+                    player.delta["esquerda"] =0
                 if event.key == pygame.K_d:
-                    player.x_speed -=5
+                    player.delta["direita"] =0
                 if event.key == pygame.K_w:
-                    player.y_speed +=5
+                    player.delta["acima"] =0
                 if event.key == pygame.K_s:
-                    player.y_speed -=5
+                    player.delta["abaixo"] =0
                 
             if event.type == pygame.MOUSEMOTION:
-                mouse = list(pygame.mouse.get_pos())  ###
+                mouse = list(pygame.mouse.get_pos())
                 print(mouse) 
 
         if player.rect.right >= (WIDTH)-100:
             if (HEIGHT/2)-50<player.rect.bottom<(HEIGHT/2+50):
-                MAPA = BLACK
-        else:
-            MAPA = GREEN
+                MAPA = assets['mapas']
+                player.kill()
+                player = Char(groups,assets)
+                player.rect.centerx = 0
+                all_sprites.add(player)
                 
+        else:
+            MAPA = assets['mapas']
+            x = 0    
         all_sprites.update()
     
-        window.fill(MAPA) #Depois, podemos usar o comando pygame.display.flip()
+        window.blit(MAPA,(0,0)) #Depois, podemos usar o comando pygame.display.flip()
         all_sprites.draw(window)
         all_flechas.draw(window)
-        pygame.draw.circle(window, BLUE,(400,360),10) ###
+        all_enemies.draw(window)
+        pygame.draw.circle(window, BLUE,(550,250),10)
         pygame.display.update()
         
 janela(window)
