@@ -322,6 +322,7 @@ def janela(window):
         hits = pygame.sprite.groupcollide(all_enemies, all_flechas, True, True, pygame.sprite.collide_mask)
 
         all_sprites.update()
+        
         in_water = pygame.sprite.spritecollide(player,water_mask_group,False,pygame.sprite.collide_mask)
         
         if in_water:
