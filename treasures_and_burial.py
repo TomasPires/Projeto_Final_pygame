@@ -309,7 +309,7 @@ def map_def(player,map_n0,map_n1,assets):
     map_name = 'map{0}.{1}'.format(map_n0,map_n1)
     map_key = map_name
     map_img = assets['maps'][map_key]
-    if player.rect.top <= 30 and  300<=player.rect.centerx <=350: #Mudança pra cima
+    if player.rect.top <= 30 and  315<=player.rect.centerx <=385: #Mudança pra cima
         if 'map{0}.{1}'.format(map_n0,(map_n1+1)) in assets['maps']:
             map_n1 +=1
             MAP = map_def(player,map_n0,map_n1,assets)
@@ -317,7 +317,7 @@ def map_def(player,map_n0,map_n1,assets):
             pygame.display.update()
         else:
             map_n1 +=0
-    elif 200 < player.rect.centery < 300 and player.rect.right == WIDTH: #Mudança pra direita
+    elif 215 <= player.rect.centery <= 285 and player.rect.right == WIDTH: #Mudança pra direita
         if 'map{0}.{1}'.format((map_n0+1),map_n1) in assets['maps']:
             map_n0 += 1
             MAP = map_def(player,map_n0,map_n1,assets)
@@ -325,7 +325,7 @@ def map_def(player,map_n0,map_n1,assets):
             pygame.display.update()
         else:
             map_n0 += 0
-    elif 425< player.rect.centery  and 300 <= player.rect.centerx <= 350: #Mudança pra baixo
+    elif 425< player.rect.centery  and 315 <= player.rect.centerx <= 385: #Mudança pra baixo
         if 'map{0}.{1}'.format(map_n0,(map_n1-1)) in assets['maps']:
             map_n1 -=1
             MAP = map_def(player,map_n0,map_n1,assets)
@@ -333,7 +333,7 @@ def map_def(player,map_n0,map_n1,assets):
             pygame.display.update()
         else:
             map_n1 -=0
-    elif 200 < player.rect.centery < 300 and player.rect.left == 0: #Mudança pra esquerda
+    elif 215 <= player.rect.centery <= 285 and player.rect.left == 0: #Mudança pra esquerda
         if 'map{0}.{1}'.format((map_n0-1),map_n1) in assets['maps']:
             map_n0 -= 1
             MAP = map_def(player,map_n0,map_n1,assets)
