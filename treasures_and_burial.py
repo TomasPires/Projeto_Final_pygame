@@ -309,7 +309,7 @@ def map_def(player,map_n0,map_n1,assets):
     map_name = 'map{0}.{1}'.format(map_n0,map_n1)
     map_key = map_name
     map_img = assets['maps'][map_key]
-    if player.rect.top == 0 and 500 < player.rect.centerx < 600:
+    if player.rect.top <= 30 and  300<=player.rect.centerx <=350: #Mudança pra cima
         if 'map{0}.{1}'.format(map_n0,(map_n1+1)) in assets['maps']:
             map_n1 +=1
             MAP = map_def(player,map_n0,map_n1,assets)
@@ -317,7 +317,7 @@ def map_def(player,map_n0,map_n1,assets):
             pygame.display.update()
         else:
             map_n1 +=0
-    elif 200 < player.rect.centery < 300 and player.rect.right == WIDTH:
+    elif 200 < player.rect.centery < 300 and player.rect.right == WIDTH: #Mudança pra direita
         if 'map{0}.{1}'.format((map_n0+1),map_n1) in assets['maps']:
             map_n0 += 1
             MAP = map_def(player,map_n0,map_n1,assets)
@@ -325,13 +325,29 @@ def map_def(player,map_n0,map_n1,assets):
             pygame.display.update()
         else:
             map_n0 += 0
+    elif 425< player.rect.centery  and 300 <= player.rect.centerx <= 350: #Mudança pra baixo
+        if 'map{0}.{1}'.format(map_n0,(map_n1-1)) in assets['maps']:
+            map_n1 -=1
+            MAP = map_def(player,map_n0,map_n1,assets)
+            window.blit(MAP,(0,0))
+            pygame.display.update()
+        else:
+            map_n1 -=0
+    elif 200 < player.rect.centery < 300 and player.rect.left == 0: #Mudança pra esquerda
+        if 'map{0}.{1}'.format((map_n0-1),map_n1) in assets['maps']:
+            map_n0 -= 1
+            MAP = map_def(player,map_n0,map_n1,assets)
+            window.blit(MAP,(0,0))
+            pygame.display.update()
+        else:
+            map_n0 -= 0
     map_name = 'map{0}.{1}'.format(map_n0,map_n1)
     map_key = map_name 
     map_img = assets['maps'][map_key]
     return map_img
 
 def game_window(window):    
-    map_n0 = 1 #primeiro digito do código do mapa
+    map_n0 = 3 #primeiro digito do código do mapa
     map_n1 = 1 #segundo digito do código do mapa  
     #grupos das sprites
     all_sprites = pygame.sprite.Group()
