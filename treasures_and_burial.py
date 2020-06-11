@@ -25,13 +25,40 @@ pygame.mixer.init()
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Treasures and Burial')
 clock = pygame.time.Clock()
-map_n0 = 1
-map_n1 = 1
+
 
 def load_assets():
     assets = {}
     assets['arrow_img'] = pygame.image.load('Pixel_TreasuresandBurial/props/objects/projectiles/arrow-16x16.png').convert_alpha()
     assets['character_img'] = pygame.image.load('Pixel_TreasuresandBurial/props/characters/front/char0.0-96x96.png').convert_alpha()
+    char_front = []
+    for i in range(0,8):
+        filename = 'Pixel_TreasuresandBurial/props/characters/front/char0.{0}-96x96.png'.format(i)
+        img = pygame.image.load(filename).convert_alpha()
+        img = pygame.transform.scale(img,(CHAR_SIZE, CHAR_SIZE))
+        char_front.append(img)
+    char_right = []
+    for i in range(0,10):
+        filename = 'Pixel_TreasuresandBurial/props/characters/right/char1.{0}-96x96.png'.format(i)
+        img = pygame.image.load(filename).convert_alpha()
+        img = pygame.transform.scale(img,(CHAR_SIZE, CHAR_SIZE))
+        char_right.append(img)
+    char_back = []
+    for i in range(0,8):
+        filename = 'Pixel_TreasuresandBurial/props/characters/back/char2.{0}-96x96.png'.format(i)
+        img = pygame.image.load(filename).convert_alpha()
+        img = pygame.transform.scale(img,(CHAR_SIZE, CHAR_SIZE))
+        char_back.append(img) 
+    char_left = []
+    for i in range(0,10):
+        filename = 'Pixel_TreasuresandBurial/props/characters/left/char3.{0}-96x96.png'.format(i)
+        img = pygame.image.load(filename).convert_alpha()
+        img = pygame.transform.scale(img,(CHAR_SIZE, CHAR_SIZE))
+        char_left.append(img)
+    assets['char_front'] = char_front
+    assets['char_right'] = char_right
+    assets['char_back'] = char_back
+    assets['char_left'] = char_left
     assets['init_screen'] = pygame.image.load('Pixel_TreasuresandBurial/img/introscreen-500x400.png').convert()
     assets['init_screen'] = pygame.transform.scale(assets['init_screen'], (WIDTH,HEIGHT))
     over_anim = []
@@ -41,34 +68,6 @@ def load_assets():
         img = pygame.transform.scale(img,(WIDTH,HEIGHT))
         over_anim.append(img)
     assets['over_screen'] = over_anim    
-    anim_right = []
-    anim_left = []
-    anim_front = []
-    anim_back = []
-    for i in range(10):
-        frame_right = 'Pixel_TreasuresandBurial/props/characters/right/char1.{0}-96x96.png'.format(i)
-        img = pygame.image.load(frame_right).convert_alpha()
-        img = pygame.transform.scale(img,(CHAR_SIZE,CHAR_SIZE))
-        anim_right.append(img)
-    assets['character_right'] = anim_right
-    for i in range(10):
-        frame_left = 'Pixel_TreasuresandBurial/props/characters/left/char3.{0}-96x96.png'.format(i)
-        img = pygame.image.load(frame_left).convert_alpha()
-        img = pygame.transform.scale(img,(CHAR_SIZE,CHAR_SIZE))
-        anim_left.append(img)
-    assets['character_left'] = anim_left
-    for i in range(8):
-        frame_front = 'Pixel_TreasuresandBurial/props/characters/front/char0.{0}-96x96.png'.format(i)
-        img = pygame.image.load(frame_front).convert_alpha()
-        img = pygame.transform.scale(img,(CHAR_SIZE,CHAR_SIZE))
-        anim_front.append(img)
-    assets['character_front'] = anim_front
-    for i in range(8):
-        frame_back = 'Pixel_TreasuresandBurial/props/characters/back/char2.{0}-96x96.png'.format(i)
-        img = pygame.image.load(frame_back).convert_alpha()
-        img = pygame.transform.scale(img,(CHAR_SIZE,CHAR_SIZE))
-        anim_front.append(img)
-    assets['character_back'] = anim_back
     anim_torch = []
     for i in range(1,5):
         frame_torch = 'Pixel_TreasuresandBurial/props/animation/fire{0}-128x128.png'.format(i)
@@ -150,22 +149,29 @@ class Char(pygame.sprite.Sprite):
     def __init__(self, groups, assets):
         pygame.sprite.Sprite.__init__(self)
 
-        self.image = assets['character_img']
+        self.groups = groups
+        self.assets = assets
+        #Tiro
+        self.last_shot = pygame.time.get_ticks()
+        self.shoot_ticks = 500
+        #Animção
+        self.imgkey = 'char_front'
+        self.index = 0
+        #Imagem
+        self.image = self.assets[self.imgkey][self.index]
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.centerx = WIDTH/2
         self.rect.centery = HEIGHT/2
+        #Movimento
         self.delta = {"left":0,"right":0,"up":0,"down":0}
         self.speed = 5
-        self.groups = groups
-        self.assets = assets
-
-        self.last_shot = pygame.time.get_ticks()
-        self.shoot_ticks = 500
 
     def update(self):
-        self.rect.x += (self.delta["right"]-self.delta["left"])*self.speed
-        self.rect.y += (self.delta["down"]-self.delta["up"])*self.speed
+        self.deltax = (self.delta["right"]-self.delta["left"])*self.speed #Variáveis de delta para serem utilizadas, também, na animação
+        self.deltay = (self.delta["down"]-self.delta["up"])*self.speed
+        self.rect.x += self.deltax
+        self.rect.y += self.deltay
 
         if self.rect.right > WIDTH:
             self.rect.right = WIDTH
@@ -175,6 +181,31 @@ class Char(pygame.sprite.Sprite):
             self.rect.top = 0
         if self.rect.bottom > HEIGHT:
             self.rect.bottom = HEIGHT
+
+        if self.deltax != 0:
+            if self.delta['right'] > 0:
+                self.imgkey = 'char_right'
+                self.index += 1
+            elif self.delta['left'] > 0:
+                self.imgkey = 'char_left'
+                self.index += 1
+        elif self.deltay != 0 and self.deltax == 0:
+            if self.delta['up'] > 0:
+                self.imgkey = 'char_back'
+                self.index += 1
+            elif self.delta['down'] > 0:
+                self.imgkey = 'char_front'
+                self.index += 1
+        elif self.deltax == 0 and self.deltay == 0:
+            self.imgkey = 'char_front'
+            self.index = 0
+
+        if self.index >= len(self.assets[self.imgkey]):
+            self.index = 0
+        
+        self.image = self.assets[self.imgkey][self.index]
+            
+
 
     def shoot(self):
         now = pygame.time.get_ticks()
@@ -274,26 +305,34 @@ class MapMask(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 #Função de troca de mapa   
-def map_def(player,map_name):
-    
+def map_def(player,map_n0,map_n1,assets):
+    map_name = 'map{0}.{1}'.format(map_n0,map_n1)
+    map_key = map_name
+    map_img = assets['maps'][map_key]
     if player.rect.top == 0 and 500 < player.rect.centerx < 600:
         if 'map{0}.{1}'.format(map_n0,(map_n1+1)) in assets['maps']:
-            map_n1 += 1
-            player.rect.centerx = 0
+            map_n1 +=1
+            MAP = map_def(player,map_n0,map_n1,assets)
+            window.blit(MAP,(0,0))
+            pygame.display.update()
         else:
-            map_n1 += 0
+            map_n1 +=0
     elif 200 < player.rect.centery < 300 and player.rect.right == WIDTH:
         if 'map{0}.{1}'.format((map_n0+1),map_n1) in assets['maps']:
             map_n0 += 1
-            player.rect.centerx = 0
+            MAP = map_def(player,map_n0,map_n1,assets)
+            window.blit(MAP,(0,0))
+            pygame.display.update()
         else:
             map_n0 += 0
-            
     map_name = 'map{0}.{1}'.format(map_n0,map_n1)
-    map_img = assets['maps'][map_name]
-    return map_n0,map_n1
+    map_key = map_name 
+    map_img = assets['maps'][map_key]
+    return map_img
 
-def game_window(window):
+def game_window(window):    
+    map_n0 = 1 #primeiro digito do código do mapa
+    map_n1 = 1 #segundo digito do código do mapa  
     #grupos das sprites
     all_sprites = pygame.sprite.Group()
     all_arrows = pygame.sprite.Group()
@@ -306,7 +345,7 @@ def game_window(window):
     assets = load_assets()
     player = Char(groups, assets)
     enemy = Enemy(groups, assets, player)
-    water_mask = MapMask(assets['masks']['map3.1'])
+    water_mask = MapMask(assets['masks']['map2.2'])
     all_sprites.add(player)
     all_enemies.add(enemy)
     water_mask_group.add(water_mask)
@@ -354,7 +393,10 @@ def game_window(window):
         if in_water:
             player.undo()
             print(in_water)
-
+            
+        MAP = map_def(player,map_n0,map_n1,assets)
+        window.blit(MAP,(0,0))
+        
         all_sprites.draw(window)
         all_arrows.draw(window)
         all_enemies.draw(window)
