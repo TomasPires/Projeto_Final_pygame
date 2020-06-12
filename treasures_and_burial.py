@@ -81,6 +81,7 @@ def load_assets():
         filename = 'Pixel_TreasuresandBurial/props/enemies/{0}_elemental.png'.format(elements[i])
         img = pygame.image.load(filename).convert_alpha()
         img = pygame.transform.scale(img,(ENEMY_SIZE,ENEMY_SIZE))
+        img.set_colorkey(WHITE)
         elementals.append(img)
     assets['elementals'] = elementals
     maps = dict()
@@ -90,20 +91,14 @@ def load_assets():
         key = 'map{0}.1'.format(i)
         maps[key] = img
     maps['map2.2'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa2.2.png').convert()
-    maps['map3.2'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa3.2.png').convert()
     maps['map3.0'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa3.0.png').convert()
+    maps['map3.2'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa3.2.png').convert()
     maps['map5.0'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa5.0.png').convert()
     maps['map5.2'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa5.2.png').convert()
     maps['map6.2'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa6.2.png').convert()
     assets['maps'] = maps
     masks = dict()
-    for i in range(2,4):
-        filename = 'Pixel_TreasuresandBurial/mask/Mask{0}.1.png'.format(i)
-        img = pygame.image.load(filename).convert()
-        img.set_colorkey(BLACK)
-        key = 'map{0}.1'.format(i)
-        masks[key] = img
-    for i in range(5,7):
+    for i in range(1,6):
         filename = 'Pixel_TreasuresandBurial/mask/Mask{0}.1.png'.format(i)
         img = pygame.image.load(filename).convert()
         img.set_colorkey(BLACK)
@@ -111,9 +106,10 @@ def load_assets():
         masks[key] = img
     masks['map2.2'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask2.2.png').convert()
     masks['map3.0'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask3.0.png').convert()
+    masks['map3.2'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask3.2.png').convert()
     masks['map5.0'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask5.0.png').convert()
     masks['map5.2'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask5.2.png').convert()
-    masks['map6.1'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask6.1.png').convert()
+    masks['map6.2'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask6.2.png').convert()
     
     assets['masks'] = masks
     chests = dict()
@@ -144,13 +140,18 @@ def load_assets():
     content['chest2'] = chest2
     chests['content'] = content
     assets['chests'] = chests
+
+    assets['init_music'] = pygame.mixer.music.load('sound/init_screen.wav')
+    assets['arrow_sound'] = pygame.mixer.music.load('sound/arrow.wav')
+    assets['background_music'] = pygame.mixer.music.load('sound/background.mp3')
+    pygame.mixer.music.set_volume(0.4)
     return assets
 
 #Classes
 class Char(pygame.sprite.Sprite):
     def __init__(self, groups, assets):
         pygame.sprite.Sprite.__init__(self)
-        self.small = False
+        
         self.groups = groups
         self.assets = assets
         #Tiro
@@ -160,6 +161,7 @@ class Char(pygame.sprite.Sprite):
         self.imgkey = 'char_front'
         self.index = 0
         #Imagem
+        self.small = False
         self.image = self.assets[self.imgkey][self.index]
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
@@ -230,6 +232,7 @@ class Arrow(pygame.sprite.Sprite):
     def __init__(self,assets,bottom,centerx):
         pygame.sprite.Sprite.__init__(self)
 
+        self.small = False
         self.image = assets['arrow_img']
         self.mask = pygame.mask.from_surface(self.image)
         self.rect=self.image.get_rect()
@@ -253,19 +256,25 @@ class Arrow(pygame.sprite.Sprite):
         if self.rect.bottom < 0:
             self.kill()
 
+        center = self.rect.center
+        if self.small:
+            self.image = pygame.transform.scale(self.image, (20, 20))
+        self.rect = self.image.get_rect()
+        self.rect.center = center
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self,groups,assets,player):
         
         pygame.sprite.Sprite.__init__(self)
         n = random.randint(0,3)
+        self.small = False
         self.assets = assets
         self.image = self.assets['elementals'][n]
         self.mask = pygame.mask.from_surface(self.image)
         self.groups = groups
         self.rect = self.image.get_rect()
-        self.rect.centerx = 550
-        self.rect.centery = HEIGHT/2
+        self.rect.centerx = WIDTH - player.rect.centerx
+        self.rect.centery = HEIGHT - player.rect.centery
         self.speed = 5
         distax = player.rect.centerx - self.rect.centerx
         distay = player.rect.centery - self.rect.centery
@@ -276,9 +285,16 @@ class Enemy(pygame.sprite.Sprite):
         self.groups = groups
         self.assets = assets
 
-    def update(self):
+    def update(self,player):
         self.rect.centery += self.speedy
         self.rect.centerx += self.speedx
+
+        distax = player.rect.centerx - self.rect.centerx
+        distay = player.rect.centery - self.rect.centery
+        angle = atan2(distay,distax)
+        self.angle = degrees(-angle)
+        self.speedx = cos(angle)*self.speed
+        self.speedy = sin(angle)*self.speed
 
         if self.rect.right > WIDTH:
             self.rect.right = WIDTH
@@ -293,14 +309,12 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.bottom = HEIGHT
             self.speed = 0
 
-class Map(pygame.sprite.Sprite):
-    def __init__(self,assets,key):
-        pygame.sprite.Sprite.__init__(self)
-        self.key = key
-        self.image = assets['maps'][self.key]
+        center = self.rect.center
+        if self.small:
+            self.image = pygame.transform.scale(self.image, (20, 20))
         self.rect = self.image.get_rect()
-        self.rect.centerx = WIDTH/2
-        self.rect.centery = HEIGHT/2 
+        self.rect.center = center
+
 
 class MapMask(pygame.sprite.Sprite):
     def __init__(self,img): 
@@ -309,19 +323,27 @@ class MapMask(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
 
+    def update(self,img):
+        self.image = img
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+
 #Função de troca de mapa   
-def map_def(player,map_k,assets):
+def map_def(player,enemy,map_k,assets):
     map_name = 'map{0}.{1}'.format(map_k["map_n0"],map_k["map_n1"])
-    map_key = map_name
-    map_img = assets['maps'][map_key]
     player.small = False
+    enemy.small = False
     if map_name == 'map4.1':#Mapa diferente requer condições diferentes
         player.small = True
+        enemy.small = True
         if 290<=player.rect.centerx <= 320 and 330 <= player.rect.centery <= 385:
             map_k["map_n0"] += 1
-            player.rect.left = 10
+            player.rect.left = 30
             player.rect.centery = 250
-        
+        elif player.rect.bottom == 500 and player.rect.left == 0:
+            map_k["map_n0"] -= 1
+            player.rect.right = WIDTH-1
+            player.rect.centery = HEIGHT
         elif 215 <= player.rect.centery <= 385 and player.rect.right == WIDTH:
             map_k["map_n0"] += 0
     elif map_name == 'map5.1':#Saída para mapa diferente
@@ -332,10 +354,10 @@ def map_def(player,map_k,assets):
         elif player.rect.top <= 30 and  215<=player.rect.centerx <=385: #Mudança pra cima
             if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]+1)) in assets['maps']:
                 map_k["map_n1"] +=1
-                player.rect.centery = 424
+                player.rect.centery = 474
             else:
                 map_k["map_n1"] +=0
-        elif 425< player.rect.centery  and 215 <= player.rect.centerx <= 385: #Mudança pra baixo
+        elif 475< player.rect.centery  and 215 <= player.rect.centerx <= 385: #Mudança pra baixo
             if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]-1)) in assets['maps']:
                 map_k["map_n1"] -=1
                 player.rect.top = 31
@@ -367,17 +389,17 @@ def map_def(player,map_k,assets):
             else:
                 map_k["map_n0"] -= 0
     map_name = 'map{0}.{1}'.format(map_k["map_n0"],map_k["map_n1"])
-    map_key = map_name 
-    map_img = assets['maps'][map_key]
-    return map_img
+    map_img = assets['maps'][map_name]
+    mask_img = assets['masks'][map_name]
+    return map_img, mask_img
 
 def game_window(window):    
-    map_k = {"map_n0":4,"map_n1":1}  
+    map_k = {"map_n0":5,"map_n1":1}  
     #grupos das sprites
     all_sprites = pygame.sprite.Group()
     all_arrows = pygame.sprite.Group()
     all_enemies = pygame.sprite.Group()
-    water_mask_group = pygame.sprite.Group()
+    mask_group = pygame.sprite.Group()
     groups = {}
     groups['all_sprites'] = all_sprites
     groups['all_arrows'] = all_arrows
@@ -385,13 +407,15 @@ def game_window(window):
     assets = load_assets()
     player = Char(groups, assets)
     enemy = Enemy(groups, assets, player)
-    water_mask = MapMask(assets['masks']['map2.2'])
     all_sprites.add(player)
     all_enemies.add(enemy)
-    water_mask_group.add(water_mask)
     
+    MASK = MapMask(map_def(player,enemy,map_k,assets)[1])
+    mask_group.add(MASK)
+
     #Loop principal
     gamerun = True
+    pygame.mixer.music.play(loops=-1)
     while gamerun:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -422,20 +446,25 @@ def game_window(window):
                 mouse = list(pygame.mouse.get_pos())
                 print(mouse) 
 
-                
-
+        
         hits = pygame.sprite.groupcollide(all_enemies, all_arrows, True, True, pygame.sprite.collide_mask)
 
         all_sprites.update()
-        all_enemies.update()
+        all_enemies.update(player)
+        all_arrows.update()
         
-        in_water = pygame.sprite.spritecollide(player,water_mask_group,False,pygame.sprite.collide_mask)
+        MASK.kill()
+        MAP = map_def(player,enemy,map_k,assets)[0]
+        MASK = MapMask(map_def(player,enemy,map_k,assets)[1])
+        mask_group.add(MASK)
         
-        if in_water:
+        
+        map_collide = pygame.sprite.spritecollide(player,mask_group,False,pygame.sprite.collide_mask)
+        
+        if map_collide:
             player.undo()
-            print(in_water)
-            
-        MAP = map_def(player,map_k,assets)
+            print(map_collide)   
+        
         window.blit(MAP,(0,0))
         
         all_sprites.draw(window)
