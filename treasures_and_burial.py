@@ -142,7 +142,8 @@ def load_assets():
     assets['chests'] = chests
 
     assets['init_music'] = pygame.mixer.music.load('sound/init_screen.wav')
-    assets['arrow_sound'] = pygame.mixer.music.load('sound/arrow.wav')
+    assets['arrow_sound'] = pygame.mixer.Sound('sound/arrow.wav')
+    assets['elemental_dying'] = pygame.mixer.Sound('sound/dead1.wav')
     assets['background_music'] = pygame.mixer.music.load('sound/background.mp3')
     pygame.mixer.music.set_volume(0.4)
     return assets
@@ -223,6 +224,7 @@ class Char(pygame.sprite.Sprite):
             new_arrow = Arrow(self.assets, self.rect.centery, self.rect.centerx)
             self.groups['all_sprites'].add(new_arrow)
             self.groups['all_arrows'].add(new_arrow)
+            self.assets['arrow_sound'].play()
 
     def undo(self):
         self.rect.x += (self.delta["left"]-self.delta["right"])*self.speed
@@ -263,7 +265,7 @@ class Arrow(pygame.sprite.Sprite):
         self.rect.center = center
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self,groups,assets,player):
+    def __init__(self,groups,assets,player,pos):
         
         pygame.sprite.Sprite.__init__(self)
         n = random.randint(0,3)
@@ -273,9 +275,10 @@ class Enemy(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.groups = groups
         self.rect = self.image.get_rect()
-        self.rect.centerx = WIDTH - player.rect.centerx
-        self.rect.centery = HEIGHT - player.rect.centery
-        self.speed = 5
+        self.pos = pos
+        self.rect.centerx = WIDTH - pos[0]
+        self.rect.centery = HEIGHT - pos[1]
+        self.speed = 3
         distax = player.rect.centerx - self.rect.centerx
         distay = player.rect.centery - self.rect.centery
         angle = atan2(distay,distax)
@@ -329,13 +332,11 @@ class MapMask(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 #Função de troca de mapa   
-def map_def(player,enemy,map_k,assets):
+def map_def(player,map_k,assets):
     map_name = 'map{0}.{1}'.format(map_k["map_n0"],map_k["map_n1"])
     player.small = False
-    enemy.small = False
     if map_name == 'map4.1':#Mapa diferente requer condições diferentes
         player.small = True
-        enemy.small = True
         if 290<=player.rect.centerx <= 320 and 330 <= player.rect.centery <= 385:
             map_k["map_n0"] += 1
             player.rect.left = 30
@@ -394,7 +395,7 @@ def map_def(player,enemy,map_k,assets):
     return map_img, mask_img
 
 def game_window(window):    
-    map_k = {"map_n0":5,"map_n1":1}  
+    map_k = {"map_n0":1,"map_n1":1}  
     #grupos das sprites
     all_sprites = pygame.sprite.Group()
     all_arrows = pygame.sprite.Group()
@@ -406,13 +407,13 @@ def game_window(window):
     groups['all_enemies'] = all_enemies
     assets = load_assets()
     player = Char(groups, assets)
-    enemy = Enemy(groups, assets, player)
     all_sprites.add(player)
-    all_enemies.add(enemy)
     
-    MASK = MapMask(map_def(player,enemy,map_k,assets)[1])
+    MASK = MapMask(map_def(player,map_k,assets)[1])
     mask_group.add(MASK)
-
+    
+    MAP = assets['maps']['map1.1']
+    spawn = False
     #Loop principal
     gamerun = True
     pygame.mixer.music.play(loops=-1)
@@ -446,16 +447,25 @@ def game_window(window):
                 mouse = list(pygame.mouse.get_pos())
                 print(mouse) 
 
-        
+        if MAP != assets['maps']['map1.1'] and spawn == False:
+            n = random.randint(3,8)
+            for i in range(n):
+                xy = random.randint(100,300)
+                enemy = Enemy(groups, assets, player,[xy,xy])
+                all_enemies.add(enemy)
+                spawn = True
+
         hits = pygame.sprite.groupcollide(all_enemies, all_arrows, True, True, pygame.sprite.collide_mask)
+        if hits:
+            assets['elemental_dying'].play()
 
         all_sprites.update()
         all_enemies.update(player)
         all_arrows.update()
         
         MASK.kill()
-        MAP = map_def(player,enemy,map_k,assets)[0]
-        MASK = MapMask(map_def(player,enemy,map_k,assets)[1])
+        MAP = map_def(player,map_k,assets)[0]
+        MASK = MapMask(map_def(player,map_k,assets)[1])
         mask_group.add(MASK)
         
         
