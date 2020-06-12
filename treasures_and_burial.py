@@ -84,15 +84,17 @@ def load_assets():
         elementals.append(img)
     assets['elementals'] = elementals
     maps = dict()
-    for i in range(1,7):
+    for i in range(1,6):
         filename = 'Pixel_TreasuresandBurial/maps/Mapa{0}.1.png'.format(i)
         img = pygame.image.load(filename).convert()
         key = 'map{0}.1'.format(i)
         maps[key] = img
+    maps['map2.2'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa2.2.png').convert()
     maps['map3.2'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa3.2.png').convert()
     maps['map3.0'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa3.0.png').convert()
     maps['map5.0'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa5.0.png').convert()
     maps['map5.2'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa5.2.png').convert()
+    maps['map6.2'] = pygame.image.load('Pixel_TreasuresandBurial/maps/Mapa6.2.png').convert()
     assets['maps'] = maps
     masks = dict()
     for i in range(2,4):
@@ -305,50 +307,41 @@ class MapMask(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 #Função de troca de mapa   
-def map_def(player,map_n0,map_n1,assets):
-    map_name = 'map{0}.{1}'.format(map_n0,map_n1)
+def map_def(player,map_k,assets):
+    map_name = 'map{0}.{1}'.format(map_k["map_n0"],map_k["map_n1"])
     map_key = map_name
     map_img = assets['maps'][map_key]
-    if player.rect.top <= 30 and  315<=player.rect.centerx <=385: #Mudança pra cima
-        if 'map{0}.{1}'.format(map_n0,(map_n1+1)) in assets['maps']:
-            map_n1 +=1
-            MAP = map_def(player,map_n0,map_n1,assets)
-            window.blit(MAP,(0,0))
-            pygame.display.update()
+    if player.rect.top <= 30 and  215<=player.rect.centerx <=385: #Mudança pra cima
+        if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]+1)) in assets['maps']:
+            map_k["map_n1"] +=1
+            player.rect.centery = 424
         else:
-            map_n1 +=0
-    elif 215 <= player.rect.centery <= 285 and player.rect.right == WIDTH: #Mudança pra direita
-        if 'map{0}.{1}'.format((map_n0+1),map_n1) in assets['maps']:
-            map_n0 += 1
-            MAP = map_def(player,map_n0,map_n1,assets)
-            window.blit(MAP,(0,0))
-            pygame.display.update()
+            map_k["map_n1"] +=0
+    elif 215 <= player.rect.centery <= 385 and player.rect.right == WIDTH: #Mudança pra direita
+        if 'map{0}.{1}'.format((map_k["map_n0"]+1),map_k["map_n1"]) in assets['maps']:
+            map_k["map_n0"] += 1
+            player.rect.left = 1
         else:
-            map_n0 += 0
-    elif 425< player.rect.centery  and 315 <= player.rect.centerx <= 385: #Mudança pra baixo
-        if 'map{0}.{1}'.format(map_n0,(map_n1-1)) in assets['maps']:
-            map_n1 -=1
-            MAP = map_def(player,map_n0,map_n1,assets)
-            window.blit(MAP,(0,0))
-            pygame.display.update()
+            map_k["map_n0"] += 0
+    elif 425< player.rect.centery  and 215 <= player.rect.centerx <= 385: #Mudança pra baixo
+        if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]-1)) in assets['maps']:
+            map_k["map_n1"] -=1
+            player.rect.top = 31
         else:
-            map_n1 -=0
-    elif 215 <= player.rect.centery <= 285 and player.rect.left == 0: #Mudança pra esquerda
-        if 'map{0}.{1}'.format((map_n0-1),map_n1) in assets['maps']:
-            map_n0 -= 1
-            MAP = map_def(player,map_n0,map_n1,assets)
-            window.blit(MAP,(0,0))
-            pygame.display.update()
+            map_k["map_n1"] -=0
+    elif 215 <= player.rect.centery <= 385 and player.rect.left == 0: #Mudança pra esquerda
+        if 'map{0}.{1}'.format((map_k["map_n0"]-1),map_k["map_n1"]) in assets['maps']:
+            map_k["map_n0"] -= 1
+            player.rect.right = WIDTH-1
         else:
-            map_n0 -= 0
-    map_name = 'map{0}.{1}'.format(map_n0,map_n1)
+            map_k["map_n0"] -= 0
+    map_name = 'map{0}.{1}'.format(map_k["map_n0"],map_k["map_n1"])
     map_key = map_name 
     map_img = assets['maps'][map_key]
     return map_img
 
 def game_window(window):    
-    map_n0 = 3 #primeiro digito do código do mapa
-    map_n1 = 1 #segundo digito do código do mapa  
+    map_k = {"map_n0":1,"map_n1":1}  
     #grupos das sprites
     all_sprites = pygame.sprite.Group()
     all_arrows = pygame.sprite.Group()
@@ -410,7 +403,7 @@ def game_window(window):
             player.undo()
             print(in_water)
             
-        MAP = map_def(player,map_n0,map_n1,assets)
+        MAP = map_def(player,map_k,assets)
         window.blit(MAP,(0,0))
         
         all_sprites.draw(window)
