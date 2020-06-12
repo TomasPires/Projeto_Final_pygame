@@ -7,7 +7,7 @@ WIDTH = 600
 HEIGHT = 500
 FPS = 30
 
-CHAR_SIZE = 96
+CHAR_SIZE = 82
 ENEMY_SIZE = 40
 CHEST_SIZE = 40
 
@@ -351,23 +351,23 @@ def map_def(player,enemy,map_k,assets):
             map_k["map_n0"] -= 1
             player.rect.centerx = 310
             player.rect.centery = 386
-        elif player.rect.top <= 30 and  215<=player.rect.centerx <=385: #Mudança pra cima
+        elif player.rect.top <= 25 and  215<=player.rect.centerx <=385: #Mudança pra cima
             if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]+1)) in assets['maps']:
                 map_k["map_n1"] +=1
-                player.rect.centery = 474
+                player.rect.centery = 440
             else:
                 map_k["map_n1"] +=0
-        elif 475< player.rect.centery  and 215 <= player.rect.centerx <= 385: #Mudança pra baixo
+        elif 450< player.rect.centery  and 315 <= player.rect.centerx <= 385: #Mudança pra baixo
             if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]-1)) in assets['maps']:
                 map_k["map_n1"] -=1
                 player.rect.top = 31
             else:
                 map_k["map_n1"] -=0
     else:
-        if player.rect.top <= 30 and  215<=player.rect.centerx <=385: #Mudança pra cima
+        if player.rect.top <= 25 and  215<=player.rect.centerx <=385: #Mudança pra cima
             if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]+1)) in assets['maps']:
                 map_k["map_n1"] +=1
-                player.rect.centery = 424
+                player.rect.centery = 440
             else:
                 map_k["map_n1"] +=0
         elif 215 <= player.rect.centery <= 385 and player.rect.right == WIDTH: #Mudança pra direita
@@ -376,7 +376,7 @@ def map_def(player,enemy,map_k,assets):
                 player.rect.left = 1
             else:
                 map_k["map_n0"] += 0
-        elif 425< player.rect.centery  and 215 <= player.rect.centerx <= 385: #Mudança pra baixo
+        elif 445< player.rect.centery  and 215 <= player.rect.centerx <= 385: #Mudança pra baixo
             if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]-1)) in assets['maps']:
                 map_k["map_n1"] -=1
                 player.rect.top = 31
