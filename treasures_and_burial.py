@@ -150,7 +150,7 @@ def load_assets():
 class Char(pygame.sprite.Sprite):
     def __init__(self, groups, assets):
         pygame.sprite.Sprite.__init__(self)
-
+        self.small = False
         self.groups = groups
         self.assets = assets
         #Tiro
@@ -205,8 +205,12 @@ class Char(pygame.sprite.Sprite):
         if self.index >= len(self.assets[self.imgkey]):
             self.index = 0
         
+        center = self.rect.center
         self.image = self.assets[self.imgkey][self.index]
-            
+        if self.small:
+            self.image=pygame.transform.scale(self.image, (48, 48))
+        self.rect = self.image.get_rect()
+        self.rect.center = center
 
 
     def shoot(self):
@@ -267,15 +271,14 @@ class Enemy(pygame.sprite.Sprite):
         distay = player.rect.centery - self.rect.centery
         angle = atan2(distay,distax)
         self.angle = degrees(-angle)
-        self.speedx = -self.speed
-        self.speedy = self.speed
+        self.speedx = cos(angle)*self.speed
+        self.speedy = sin(angle)*self.speed
         self.groups = groups
         self.assets = assets
 
-
     def update(self):
-        self.rect.y += self.speedy
-        self.rect.x += self.speedx
+        self.rect.centery += self.speedy
+        self.rect.centerx += self.speedx
 
         if self.rect.right > WIDTH:
             self.rect.right = WIDTH
@@ -311,37 +314,65 @@ def map_def(player,map_k,assets):
     map_name = 'map{0}.{1}'.format(map_k["map_n0"],map_k["map_n1"])
     map_key = map_name
     map_img = assets['maps'][map_key]
-    if player.rect.top <= 30 and  215<=player.rect.centerx <=385: #Mudança pra cima
-        if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]+1)) in assets['maps']:
-            map_k["map_n1"] +=1
-            player.rect.centery = 424
-        else:
-            map_k["map_n1"] +=0
-    elif 215 <= player.rect.centery <= 385 and player.rect.right == WIDTH: #Mudança pra direita
-        if 'map{0}.{1}'.format((map_k["map_n0"]+1),map_k["map_n1"]) in assets['maps']:
+    player.small = False
+    if map_name == 'map4.1':#Mapa diferente requer condições diferentes
+        player.small = True
+        if 290<=player.rect.centerx <= 320 and 330 <= player.rect.centery <= 385:
             map_k["map_n0"] += 1
-            player.rect.left = 1
-        else:
+            player.rect.left = 10
+            player.rect.centery = 250
+        
+        elif 215 <= player.rect.centery <= 385 and player.rect.right == WIDTH:
             map_k["map_n0"] += 0
-    elif 425< player.rect.centery  and 215 <= player.rect.centerx <= 385: #Mudança pra baixo
-        if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]-1)) in assets['maps']:
-            map_k["map_n1"] -=1
-            player.rect.top = 31
-        else:
-            map_k["map_n1"] -=0
-    elif 215 <= player.rect.centery <= 385 and player.rect.left == 0: #Mudança pra esquerda
-        if 'map{0}.{1}'.format((map_k["map_n0"]-1),map_k["map_n1"]) in assets['maps']:
+    elif map_name == 'map5.1':#Saída para mapa diferente
+        if 215 <= player.rect.centery <= 385 and player.rect.left == 0:
             map_k["map_n0"] -= 1
-            player.rect.right = WIDTH-1
-        else:
-            map_k["map_n0"] -= 0
+            player.rect.centerx = 310
+            player.rect.centery = 386
+        elif player.rect.top <= 30 and  215<=player.rect.centerx <=385: #Mudança pra cima
+            if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]+1)) in assets['maps']:
+                map_k["map_n1"] +=1
+                player.rect.centery = 424
+            else:
+                map_k["map_n1"] +=0
+        elif 425< player.rect.centery  and 215 <= player.rect.centerx <= 385: #Mudança pra baixo
+            if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]-1)) in assets['maps']:
+                map_k["map_n1"] -=1
+                player.rect.top = 31
+            else:
+                map_k["map_n1"] -=0
+    else:
+        if player.rect.top <= 30 and  215<=player.rect.centerx <=385: #Mudança pra cima
+            if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]+1)) in assets['maps']:
+                map_k["map_n1"] +=1
+                player.rect.centery = 424
+            else:
+                map_k["map_n1"] +=0
+        elif 215 <= player.rect.centery <= 385 and player.rect.right == WIDTH: #Mudança pra direita
+            if 'map{0}.{1}'.format((map_k["map_n0"]+1),map_k["map_n1"]) in assets['maps']:
+                map_k["map_n0"] += 1
+                player.rect.left = 1
+            else:
+                map_k["map_n0"] += 0
+        elif 425< player.rect.centery  and 215 <= player.rect.centerx <= 385: #Mudança pra baixo
+            if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]-1)) in assets['maps']:
+                map_k["map_n1"] -=1
+                player.rect.top = 31
+            else:
+                map_k["map_n1"] -=0
+        elif 215 <= player.rect.centery <= 385 and player.rect.left == 0: #Mudança pra esquerda
+            if 'map{0}.{1}'.format((map_k["map_n0"]-1),map_k["map_n1"]) in assets['maps']:
+                map_k["map_n0"] -= 1
+                player.rect.right = WIDTH-1
+            else:
+                map_k["map_n0"] -= 0
     map_name = 'map{0}.{1}'.format(map_k["map_n0"],map_k["map_n1"])
     map_key = map_name 
     map_img = assets['maps'][map_key]
     return map_img
 
 def game_window(window):    
-    map_k = {"map_n0":1,"map_n1":1}  
+    map_k = {"map_n0":4,"map_n1":1}  
     #grupos das sprites
     all_sprites = pygame.sprite.Group()
     all_arrows = pygame.sprite.Group()
@@ -396,6 +427,7 @@ def game_window(window):
         hits = pygame.sprite.groupcollide(all_enemies, all_arrows, True, True, pygame.sprite.collide_mask)
 
         all_sprites.update()
+        all_enemies.update()
         
         in_water = pygame.sprite.spritecollide(player,water_mask_group,False,pygame.sprite.collide_mask)
         
