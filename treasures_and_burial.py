@@ -29,6 +29,7 @@ clock = pygame.time.Clock()
 
 def load_assets():
     assets = {}
+    assets['score_font'] = pygame.font.Font('Pixel_TreasuresandBurial/props/objects/font.ttf', 28)
     assets['arrow_img'] = pygame.image.load('Pixel_TreasuresandBurial/props/objects/projectiles/arrow-16x16.png').convert_alpha()
     assets['character_img'] = pygame.image.load('Pixel_TreasuresandBurial/props/characters/front/char0.0-96x96.png').convert_alpha()
     char_front = []
@@ -336,7 +337,14 @@ class MapMask(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
 
-
+class Chest(pygame.sprite.Sprite):
+    def __init__(self,img,assets,chest_type):
+        self.assets = assets
+        self.type = chest_type #Recebe uma string do tipo do baú: normal(1) ou dungeon(2) 
+        if self.type == 'normal':
+            self.image = assets['chests']['closed'][0]
+        else:
+            self.image = assets['chests']['closed'][1]
 #Função de troca de mapa   
 def map_def(player,map_k,assets):
     map_name = 'map{0}.{1}'.format(map_k["map_n0"],map_k["map_n1"])
@@ -347,10 +355,10 @@ def map_def(player,map_k,assets):
             map_k["map_n0"] += 1
             player.rect.left = 30
             player.rect.centery = 250
-        elif player.rect.bottom == 500 and player.rect.left == 0:
+        elif 450 < player.rect.bottom <= 500 and player.rect.left == 0:
             map_k["map_n0"] -= 1
-            player.rect.right = WIDTH-1
-            player.rect.centery = HEIGHT
+            player.rect.right = WIDTH-10
+            player.rect.centery = HEIGHT/2
         elif 215 <= player.rect.centery <= 385 and player.rect.right == WIDTH:
             map_k["map_n0"] += 0
     elif map_name == 'map5.1':#Saída para mapa diferente
@@ -380,7 +388,9 @@ def map_def(player,map_k,assets):
         elif 215 <= player.rect.centery <= 385 and player.rect.right == WIDTH: #Mudança pra direita
             if 'map{0}.{1}'.format((map_k["map_n0"]+1),map_k["map_n1"]) in assets['maps']:
                 map_k["map_n0"] += 1
-                player.rect.left = 1
+                if map_name == 'map3.1':
+                    player.rect.bottom = 500
+                player.rect.left = 1   
             else:
                 map_k["map_n0"] += 0
         elif 445< player.rect.centery  and 215 <= player.rect.centerx <= 385: #Mudança pra baixo
@@ -401,7 +411,12 @@ def map_def(player,map_k,assets):
     return map_img, mask_img
 
 def game_window(window):    
-    map_k = {"map_n0":1,"map_n1":1}  
+    map_k = {"map_n0":1,"map_n1":1}
+    score = 0  
+    health = 5
+    RODANDO = 0
+    PAUSADO = 1
+    myfont = pygame.font.SysFont("monospace", 16)
     #grupos das sprites
     all_sprites = pygame.sprite.Group()
     all_arrows = pygame.sprite.Group()
@@ -417,17 +432,18 @@ def game_window(window):
     
     MASK = MapMask(map_def(player,map_k,assets)[1])
     mask_group.add(MASK)
-    
+    GO= assets['over_screen'][1]
     MAP = assets['maps']['map1.1']
     spawn = False
     #Loop principal
-    gamerun = True
+    gamerun = RODANDO
     pygame.mixer.music.play(loops=-1)
-    while gamerun:
+    while True:
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                gamerun = False
+                pygame.quit()
+                sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
                     player.delta["left"] =1
@@ -464,14 +480,28 @@ def game_window(window):
             if MAP == assets['maps']['map1.1'] or MAP == assets['maps']['map4.1']:
                 for enemy in all_enemies:
                     enemy.kill()
-
-        hits = pygame.sprite.groupcollide(all_enemies, all_arrows, True, True, pygame.sprite.collide_mask)
-        if hits:
-            assets['elemental_dying'].play()
-
+        
+        if health == 0:
+            pygame.mixer.music.pause()
+            window.blit(GO,(0,0))
+            text_surface = assets['score_font'].render("Score:{:0d}".format(score), True, (255,255,255))
+            text_rect = text_surface.get_rect()
+            text_rect = ((WIDTH/2-80), (HEIGHT/2+30))
+            window.blit(text_surface, text_rect)
+            gamerun = PAUSADO
+            if event.type == pygame.KEYDOWN:
+                map_k["map_n0"] = 1
+                map_k["map_n1"] = 1
+                gamerun = RODANDO
+                health = 5
+                score = 0
+                window.blit(MAP,(0,0))
+        if gamerun == PAUSADO:
+            pygame.display.flip()
+            continue
         all_sprites.update()
         all_enemies.update(player)
-        
+
         MASK.kill()
         new_map = map_def(player,map_k,assets)[0]
         if new_map != MAP:
@@ -485,16 +515,34 @@ def game_window(window):
         mask_group.add(MASK)
         
         
+        
         map_collide = pygame.sprite.spritecollide(player,mask_group,False,pygame.sprite.collide_mask)
         if map_collide:
             player.undo()
             print(map_collide)   
-        
+        hits = pygame.sprite.groupcollide(all_enemies, all_arrows, True, True, pygame.sprite.collide_mask)
+        impact = pygame.sprite.groupcollide(all_enemies,all_sprites,True,False, pygame.sprite.collide_mask)
         window.blit(MAP,(0,0))
         
         all_sprites.draw(window)
         all_arrows.draw(window)
         all_enemies.draw(window)
+        if hits:
+            assets['elemental_dying'].play()
+            score += 1
+        if impact:
+            health -=1
+        #Health e Score
+        text_surface = assets['score_font'].render(chr(9829) * health, True, (255, 0, 0))
+        text_rect = text_surface.get_rect()
+        text_rect.bottomleft = (10, HEIGHT - 10)
+        window.blit(text_surface, text_rect)
+        text_surface = assets['score_font'].render("Score:{:0d}".format(score), True, (0, 0, 0))
+        text_rect = text_surface.get_rect()
+        text_rect.topleft = (0,  0)
+        window.blit(text_surface, text_rect)
+
+
         pygame.display.update()
         
 game_window(window)
