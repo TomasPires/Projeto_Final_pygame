@@ -117,33 +117,37 @@ def load_assets():
     masks['map6.2'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask6.2.png').convert()
     masks['map6.2'].set_colorkey(BLACK)
     assets['masks'] = masks
+
     chests = dict()
-    closed_chests = []
+    chest1 = dict()
+    chest2 = dict()
+    chest1['closed'] = pygame.image.load('Pixel_TreasuresandBurial/props/objects/chests/chest1closed-32x32.png').convert_alpha()    
+    chest1['closed'] = pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
+    chest2['closed'] = pygame.image.load('Pixel_TreasuresandBurial/props/objects/chests/chest1closed-32x32.png').convert_alpha()    
+    chest2['closed'] = pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
+
+    
+    chest1['empty'] = pygame.image.load('Pixel_TreasuresandBurial/props/objects/chests/chest1openEMPTY-32x32.png').convert_alpha()    
+    chest1['empty'] = pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
+    chest2['empty']= pygame.image.load('Pixel_TreasuresandBurial/props/objects/chests/chest2openEMPTY-32x32.png').convert_alpha()    
+    chest2['empty']= pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
+
+    item1 = []
     for i in range(1,3):
-        img = pygame.image.load('Pixel_TreasuresandBurial/props/objects/chests/chest{0}closed-32x32.png'.format(i)).convert_alpha()
+        img = pygame.image.load('Pixel_TreasuresandBurial/props/objects/chests/chest1openFULL{0}-32x32.png'.format(i)).convert_alpha()    
         img = pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
-        closed_chests.append(img)
-    open_chests = []
+        item1.append(img)
+    chest1['full'] = item1
+
+    item2 = []
     for i in range(1,3):
-        img = pygame.image.load('Pixel_TreasuresandBurial/props/objects/chests/chest{0}openEMPTY-32x32.png'.format(i)).convert_alpha()
+        img = pygame.image.load('Pixel_TreasuresandBurial/props/objects/chests/chest2openFULL{0}-32x32.png'.format(i)).convert_alpha()    
         img = pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
-        closed_chests.append(img)
-    chests['closed'] = closed_chests
-    chests['open'] = open_chests
-    content = dict()
-    chest1 = []
-    chest2 = []
-    for i in range(1,3):
-        img = pygame.image.load('Pixel_TreasuresandBurial/props/objects/chests/chest1openFULL{0}-32x32.png'.format(i)).convert_alpha()
-        img = pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
-        chest1.append(img)
-    for i in range(1,3):
-        img = pygame.image.load('Pixel_TreasuresandBurial/props/objects/chests/chest2openFULL{0}-32x32.png'.format(i)).convert_alpha()
-        img = pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
-        chest2.append(img)
-    content['chest1'] = chest1
-    content['chest2'] = chest2
-    chests['content'] = content
+        item1.append(img)
+    chest2['full'] = item2
+
+    chests['chest1'] = chest1
+    chests['chest2'] = chest2
     assets['chests'] = chests
 
     assets['init_music'] = pygame.mixer.music.load('sound/init_screen.wav')
@@ -336,7 +340,23 @@ class MapMask(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
 
+class Chest(pygame.sprite.Sprite):
+    def __init__(self,img,assets,chest_type,chest_pos):
+        self.assets = assets
+        self.type = chest_type #Recebe uma string do tipo do baú: normal(1) ou dungeon(2) 
+        if self.type == 'normal':
+            self.key = 'chest1'
+        else:
+            self.key = 'chest2'
+        self.image = self.assets['chests'][self.key]['closed']
+        self.rect = self.image.get_rect()
+        self.rect.centerx = chest_pos[0]
+        self.rect.centery = chest_pos[1]
 
+    def open(self,status):
+        itemtype = random.randint(1,2)  #número que sorteia aleatoriamente o tipo de item que será mostrado ao abrir o baú
+        self.image = assets['chests'][self.key]['full'][itemtype]
+        
 #Função de troca de mapa   
 def map_def(player,map_k,assets):
     map_name = 'map{0}.{1}'.format(map_k["map_n0"],map_k["map_n1"])
@@ -347,10 +367,10 @@ def map_def(player,map_k,assets):
             map_k["map_n0"] += 1
             player.rect.left = 30
             player.rect.centery = 250
-        elif player.rect.bottom == 500 and player.rect.left == 0:
+        elif 450 < player.rect.bottom <= 500 and player.rect.left == 0:
             map_k["map_n0"] -= 1
-            player.rect.right = WIDTH-1
-            player.rect.centery = HEIGHT
+            player.rect.right = WIDTH-10
+            player.rect.centery = HEIGHT/2
         elif 215 <= player.rect.centery <= 385 and player.rect.right == WIDTH:
             map_k["map_n0"] += 0
     elif map_name == 'map5.1':#Saída para mapa diferente
@@ -380,7 +400,9 @@ def map_def(player,map_k,assets):
         elif 215 <= player.rect.centery <= 385 and player.rect.right == WIDTH: #Mudança pra direita
             if 'map{0}.{1}'.format((map_k["map_n0"]+1),map_k["map_n1"]) in assets['maps']:
                 map_k["map_n0"] += 1
-                player.rect.left = 1
+                if map_name == 'map3.1':
+                    player.rect.bottom = 500
+                player.rect.left = 1   
             else:
                 map_k["map_n0"] += 0
         elif 445< player.rect.centery  and 215 <= player.rect.centerx <= 385: #Mudança pra baixo
@@ -401,11 +423,13 @@ def map_def(player,map_k,assets):
     return map_img, mask_img
 
 def game_window(window):    
-    map_k = {"map_n0":1,"map_n1":1}  
+    map_k = {"map_n0":1,"map_n1":1}
+    score = 0  
     #grupos das sprites
     all_sprites = pygame.sprite.Group()
     all_arrows = pygame.sprite.Group()
     all_enemies = pygame.sprite.Group()
+    all_chests = pygame.sprite.Group()
     mask_group = pygame.sprite.Group()
     groups = {}
     groups['all_sprites'] = all_sprites
@@ -468,7 +492,9 @@ def game_window(window):
         hits = pygame.sprite.groupcollide(all_enemies, all_arrows, True, True, pygame.sprite.collide_mask)
         if hits:
             assets['elemental_dying'].play()
-
+        for hit in hits:
+            score += 10
+        
         all_sprites.update()
         all_enemies.update(player)
         
@@ -483,6 +509,7 @@ def game_window(window):
             spawn = False
         MASK = MapMask(map_def(player,map_k,assets)[1])
         mask_group.add(MASK)
+        
         
         
         map_collide = pygame.sprite.spritecollide(player,mask_group,False,pygame.sprite.collide_mask)
