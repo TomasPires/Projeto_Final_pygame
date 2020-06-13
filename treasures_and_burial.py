@@ -105,12 +105,17 @@ def load_assets():
         key = 'map{0}.1'.format(i)
         masks[key] = img
     masks['map2.2'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask2.2.png').convert()
+    masks['map2.2'].set_colorkey(BLACK)
     masks['map3.0'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask3.0.png').convert()
+    masks['map3.0'].set_colorkey(BLACK)
     masks['map3.2'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask3.2.png').convert()
+    masks['map3.2'].set_colorkey(BLACK)
     masks['map5.0'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask5.0.png').convert()
+    masks['map5.0'].set_colorkey(BLACK)
     masks['map5.2'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask5.2.png').convert()
+    masks['map5.2'].set_colorkey(BLACK)
     masks['map6.2'] = pygame.image.load('Pixel_TreasuresandBurial/mask/Mask6.2.png').convert()
-    
+    masks['map6.2'].set_colorkey(BLACK)
     assets['masks'] = masks
     chests = dict()
     closed_chests = []
@@ -145,7 +150,7 @@ def load_assets():
     assets['arrow_sound'] = pygame.mixer.Sound('sound/arrow.wav')
     assets['elemental_dying'] = pygame.mixer.Sound('sound/dead1.wav')
     assets['background_music'] = pygame.mixer.music.load('sound/background.mp3')
-    pygame.mixer.music.set_volume(0.4)
+    pygame.mixer.music.set_volume(0.25)
     return assets
 
 #Classes
@@ -331,6 +336,7 @@ class MapMask(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
 
+
 #Função de troca de mapa   
 def map_def(player,map_k,assets):
     map_name = 'map{0}.{1}'.format(map_k["map_n0"],map_k["map_n1"])
@@ -446,14 +452,18 @@ def game_window(window):
             if event.type == pygame.MOUSEMOTION:
                 mouse = list(pygame.mouse.get_pos())
                 print(mouse) 
-
-        if MAP != assets['maps']['map1.1'] and spawn == False:
-            n = random.randint(3,8)
-            for i in range(n):
-                xy = random.randint(100,300)
-                enemy = Enemy(groups, assets, player,[xy,xy])
-                all_enemies.add(enemy)
-                spawn = True
+        
+        if spawn == True:
+            if MAP != assets['maps']['map1.1']:
+                n = random.randint(3,8)
+                for i in range(n):
+                    xy = random.randint(50,400)
+                    enemy = Enemy(groups, assets, player,[xy,xy])
+                    all_enemies.add(enemy)
+                    spawn = False
+            if MAP == assets['maps']['map1.1'] or MAP == assets['maps']['map4.1']:
+                for enemy in all_enemies:
+                    enemy.kill()
 
         hits = pygame.sprite.groupcollide(all_enemies, all_arrows, True, True, pygame.sprite.collide_mask)
         if hits:
@@ -461,16 +471,21 @@ def game_window(window):
 
         all_sprites.update()
         all_enemies.update(player)
-        all_arrows.update()
         
         MASK.kill()
-        MAP = map_def(player,map_k,assets)[0]
+        new_map = map_def(player,map_k,assets)[0]
+        if new_map != MAP:
+            spawn = True
+            MAP = new_map
+            for enemy in all_enemies:
+                enemy.kill()
+        else:
+            spawn = False
         MASK = MapMask(map_def(player,map_k,assets)[1])
         mask_group.add(MASK)
         
         
         map_collide = pygame.sprite.spritecollide(player,mask_group,False,pygame.sprite.collide_mask)
-        
         if map_collide:
             player.undo()
             print(map_collide)   
