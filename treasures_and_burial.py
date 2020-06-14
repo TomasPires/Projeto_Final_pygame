@@ -69,7 +69,7 @@ def load_assets():
     assets['char_left'] = char_left
     assets['init_screen'] = pygame.image.load(path.join(IMG_DIR, 'introscreen-500x400.png')).convert()
     assets['init_screen'] = pygame.transform.scale(assets['init_screen'], (WIDTH,HEIGHT))
-    assets['over_screen'] = pygame.image.load(path.join(IMG_DIR, 'gameover2.png')).convert()
+    assets['over_screen'] = pygame.image.load(path.join(IMG_DIR, 'gameover.png')).convert()
     assets['over_screen'] = pygame.transform.scale(assets['over_screen'],(WIDTH,HEIGHT))   
     anim_torch = []
     for i in range(1,5):
@@ -387,7 +387,7 @@ def map_def(player,map_k,assets):
                 player.rect.centery = 440
             else:
                 map_k["map_n1"] +=0
-        elif player.rect.bottom > 480  and 315 <= player.rect.centerx <= 385: #Mudança pra baixo
+        elif player.rect.bottom == 500  and 340 <= player.rect.centerx <= 370: #Mudança pra baixo
             if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]-1)) in assets['maps']:
                 map_k["map_n1"] -=1
                 player.rect.top = 31
@@ -451,7 +451,7 @@ def chest_pos(assets,map_img):
     return pos
 
 def game_window(window):    
-    map_k = {"map_n0":1,"map_n1":1}
+    map_k = {"map_n0":5,"map_n1":2}
     score = 0  
     health = 5
     RUNNING = 0
@@ -476,6 +476,8 @@ def game_window(window):
     MAP = assets['maps']['map1.1']
     spawn = False
     map_w_chest = [assets['maps']['map1.1'],assets['maps']['map2.2'],assets['maps']['map5.0'],assets['maps']['map5.2']]
+    
+    wave = 3 #Variável para guardar o número da wave de mobs do último mapa
     #Loop principal
     gamerun = RUNNING
     pygame.mixer.music.play(loops=-1)
@@ -512,15 +514,31 @@ def game_window(window):
         
         if spawn == True:
             if MAP != assets['maps']['map1.1']:
-                n = random.randint(3,8)
-                for i in range(n):
-                    xy = random.randint(50,400)
-                    enemy = Enemy(groups, assets, player,[xy,xy])
-                    all_enemies.add(enemy)
+
+                if MAP == assets['maps']['map6.2']:
+                    if wave != 0 and len(all_enemies) == 0:
+                        n = random.randint(3,8)
+                        for i in range(n):
+                            xy = random.randint(50,400)
+                            enemy = Enemy(groups, assets, player,[xy,xy])
+                            all_enemies.add(enemy)
+                            wave -= 1
+                        spawn = True
+
+                else:
+                    n = random.randint(3,8)
+                    for i in range(n):
+                        xy = random.randint(50,400)
+                        enemy = Enemy(groups, assets, player,[xy,xy])
+                        all_enemies.add(enemy)
                     spawn = False
+
             if MAP == assets['maps']['map1.1'] or MAP == assets['maps']['map4.1']:
                 for enemy in all_enemies:
                     enemy.kill()
+
+                        
+
 
         if health == 0:
             pygame.mixer.music.pause()
@@ -594,9 +612,6 @@ def game_window(window):
         all_arrows.draw(window)
         all_enemies.draw(window)
         
-        
-       
-        
         if item_collect:
             score += 100
             assets['point'].play()
@@ -610,7 +625,6 @@ def game_window(window):
         if impact:
             health -= 1
         
-
         #Health e Score
         text_surface = assets['score_font'].render(chr(9829) * health, True, (255, 0, 0))
         text_rect = text_surface.get_rect()
@@ -621,7 +635,6 @@ def game_window(window):
         text_rect.topleft = (0,  0)
         window.blit(text_surface, text_rect)
 
-        
         pygame.display.update()
         
 game_window(window)
