@@ -18,6 +18,7 @@ ENEMY_DIR = path.join(path.dirname(__file__),  'Pixel_TreasuresandBurial', 'prop
 OBJECT_DIR = path.join(path.dirname(__file__),  'Pixel_TreasuresandBurial', 'props', 'objects')
 IMG_DIR = path.join(path.dirname(__file__), 'Pixel_TreasuresandBurial', 'img')
 SOUND_DIR = path.join(path.dirname(__file__), 'sound')
+
 WHITE = (255,255,255)
 GREEN = (0,255,0)
 BLUE = (0,0,255)
@@ -68,13 +69,8 @@ def load_assets():
     assets['char_left'] = char_left
     assets['init_screen'] = pygame.image.load(path.join(IMG_DIR, 'introscreen-500x400.png')).convert()
     assets['init_screen'] = pygame.transform.scale(assets['init_screen'], (WIDTH,HEIGHT))
-    over_anim = []
-    for i in range(1,3):
-        filename = 'gameover{0}.png'.format(i)
-        img = pygame.image.load(path.join(IMG_DIR, filename)).convert()
-        img = pygame.transform.scale(img,(WIDTH,HEIGHT))
-        over_anim.append(img)
-    assets['over_screen'] = over_anim    
+    assets['over_screen'] = pygame.image.load(path.join(IMG_DIR, 'gameover2.png')).convert()
+    assets['over_screen'] = pygame.transform.scale(assets['over_screen'],(WIDTH,HEIGHT))   
     anim_torch = []
     for i in range(1,5):
         frame_torch = 'Pixel_TreasuresandBurial/props/animation/fire{0}-128x128.png'.format(i)
@@ -125,9 +121,9 @@ def load_assets():
     chest1 = dict()
     chest2 = dict()
     chest1['closed'] = pygame.image.load(path.join(OBJECT_DIR, 'chests/chest1closed-32x32.png')).convert()    
-    chest1['closed'] = pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
+    chest1['closed'] = pygame.transform.scale(chest1['closed'],(CHEST_SIZE,CHEST_SIZE))
     chest2['closed'] = pygame.image.load(path.join(OBJECT_DIR, 'chests/chest2closed-32x32.png')).convert()    
-    chest2['closed'] = pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
+    chest2['closed'] = pygame.transform.scale(chest2['closed'],(CHEST_SIZE,CHEST_SIZE))
 
     
     chest1['empty'] = pygame.image.load(path.join(OBJECT_DIR, 'chests/chest1openEMPTY-32x32.png')).convert()    
@@ -157,6 +153,7 @@ def load_assets():
     assets['arrow_sound'] = pygame.mixer.Sound(path.join(SOUND_DIR, 'arrow.wav'))
     assets['elemental_dying'] = pygame.mixer.Sound(path.join(SOUND_DIR, 'dead1.wav'))
     assets['background_music'] = pygame.mixer.music.load(path.join(SOUND_DIR, 'background.mp3'))
+    assets['point'] = pygame.mixer.Sound(path.join(SOUND_DIR, 'point.wav'))
     pygame.mixer.music.set_volume(0.25)
     return assets
 
@@ -169,7 +166,7 @@ class Char(pygame.sprite.Sprite):
         self.assets = assets
         #Tiro
         self.last_shot = pygame.time.get_ticks()
-        self.shoot_ticks = 500
+        self.shoot_ticks = 400
         #Animção
         self.imgkey = 'char_front'
         self.index = 0
@@ -344,26 +341,24 @@ class MapMask(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 class Chest(pygame.sprite.Sprite):
-    def __init__(self,assets,chest_type,chest_pos):
+    def __init__(self,assets,chest_type,chest_pos,player):
         pygame.sprite.Sprite.__init__(self)
         self.assets = assets
         self.type = chest_type #Recebe uma string do tipo do baú: outside(tipo 1) ou dungeon(tipo 2) 
+        self.status = 'closed' #Recebe uma sting que define o status do baú: fechado, cheio ou vazio
         if self.type == 'outside':
             self.key = 'chest1'
         elif self.type == 'dungeon':
             self.key = 'chest2'
-        self.image = self.assets['chests'][self.key]['closed']
+        self.image = self.assets['chests'][self.key][self.status]
         self.rect = self.image.get_rect()
         self.rect.centerx = chest_pos[0]
         self.rect.centery = chest_pos[1]
+        self.mask = pygame.mask.from_surface(self.image)
 
     def open(self):
-        itemtype = random.randint(1,2)  #número que sorteia aleatoriamente o tipo de item que será mostrado ao abrir o baú
-        self.image = assets['chests'][self.key]['full'][itemtype]
-        
-    def empty(self):
-        self.image = assets['chests'][self.key]['empty']
-        
+        self.image = self.assets['chests'][self.key]['full'] #Troca a imagem para a do baú aberto
+
 #Função de troca de mapa   
 def map_def(player,map_k,assets):
     map_name = 'map{0}.{1}'.format(map_k["map_n0"],map_k["map_n1"])
@@ -383,15 +378,16 @@ def map_def(player,map_k,assets):
     elif map_name == 'map5.1':#Saída para mapa diferente
         if 215 <= player.rect.centery <= 385 and player.rect.left == 0:
             map_k["map_n0"] -= 1
-            player.rect.centerx = 310
+            player.rect.centerx = 280
             player.rect.centery = 386
-        elif player.rect.top <= 25 and  215<=player.rect.centerx <=385: #Mudança pra cima
+        elif player.rect.top <= 15 and  215<=player.rect.centerx <=385: #Mudança pra cima
             if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]+1)) in assets['maps']:
                 map_k["map_n1"] +=1
+                player.rect.centerx = 280
                 player.rect.centery = 440
             else:
                 map_k["map_n1"] +=0
-        elif 450< player.rect.centery  and 315 <= player.rect.centerx <= 385: #Mudança pra baixo
+        elif player.rect.bottom > 480  and 315 <= player.rect.centerx <= 385: #Mudança pra baixo
             if 'map{0}.{1}'.format(map_k["map_n0"],(map_k["map_n1"]-1)) in assets['maps']:
                 map_k["map_n1"] -=1
                 player.rect.top = 31
@@ -429,28 +425,28 @@ def map_def(player,map_k,assets):
     mask_img = assets['masks'][map_name]
     return map_img, mask_img
 
+def chest_spawn(assets,MAP,chests,player):
+    dungeon = ['map5.0','map5.1','map5.2','map6.2']
+    if MAP != assets['maps']['map4.1'] or MAP != assets['maps']['map6.2']:
+            if len(chests) > 1:
+                for chest in chests:
+                    chest.kill()
+            if MAP in dungeon:
+                chest_type = 'dungeon'
+            else:
+                chest_type = 'outside'
+            chest_xy = chest_pos(assets,MAP)
+            chest = Chest(assets,chest_type,chest_xy,player)
+    return chest
+
 def chest_pos(assets,map_img):
     if map_img == assets['maps']['map1.1']:
-        pos = [100,HEIGHT/2]
-    if map_img == assets['maps']['map2.1']:
-        pos = [100,100]
+        pos = [50,HEIGHT/2]
     if map_img == assets['maps']['map2.2']:
-        pos = [100,100]
-    if map_img == assets['maps']['map3.0']:
-        pos = [100,100]
-    if map_img == assets['maps']['map3.1']:
-        pos = [100,100]
-    if map_img == assets['maps']['map3.2']:
-        pos = [100,100]
-    if map_img == assets['maps']['map4.1']:
-        pos = [100,100]
+        pos = [150,130]
     if map_img == assets['maps']['map5.0']:
         pos = [100,100]
-    if map_img == assets['maps']['map5.1']:
-        pos = [100,100]
     if map_img == assets['maps']['map5.2']:
-        pos = [100,100]
-    if map_img == assets['maps']['map6.2']:
         pos = [100,100]
     return pos
 
@@ -471,15 +467,15 @@ def game_window(window):
     groups['all_sprites'] = all_sprites
     groups['all_arrows'] = all_arrows
     groups['all_enemies'] = all_enemies
+    groups['chests'] = chests
     assets = load_assets()
     player = Char(groups, assets)
     all_sprites.add(player)
-    dungeon = ['map5.0','map5.1','map5.2','map6.2']
     MASK = MapMask(map_def(player,map_k,assets)[1])
     map_masks.add(MASK)
-    GO= assets['over_screen'][1]
     MAP = assets['maps']['map1.1']
     spawn = False
+    map_w_chest = [assets['maps']['map1.1'],assets['maps']['map2.2'],assets['maps']['map5.0'],assets['maps']['map5.2']]
     #Loop principal
     gamerun = RUNNING
     pygame.mixer.music.play(loops=-1)
@@ -526,16 +522,12 @@ def game_window(window):
                 for enemy in all_enemies:
                     enemy.kill()
 
-        hits = pygame.sprite.groupcollide(all_enemies, all_arrows, True, True, pygame.sprite.collide_mask)
-        if hits:
-            assets['elemental_dying'].play()
-
         if health == 0:
             pygame.mixer.music.pause()
-            window.blit(GO,(0,0))
+            window.blit(assets['over_screen'],(0,0))
             text_surface = assets['score_font'].render("Score:{:0d}".format(score), True, (255,255,255))
             text_rect = text_surface.get_rect()
-            text_rect = ((WIDTH/2-80), (HEIGHT/2+15))
+            text_rect = ((WIDTH/2-125), (HEIGHT/2+15))
             window.blit(text_surface, text_rect)
             gamerun = PAUSED
             if event.type == pygame.KEYDOWN:
@@ -546,6 +538,9 @@ def game_window(window):
                     health = 5
                     score = 0
                     window.blit(MAP,(0,0))
+                elif event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+
         if gamerun == PAUSED:
             pygame.display.flip()
             continue
@@ -568,33 +563,54 @@ def game_window(window):
         MASK = MapMask(map_def(player,map_k,assets)[1])
         map_masks.add(MASK)
         
-        if MAP != assets['maps']['map4.1'] or MAP != assets['maps']['map6.2']:
-            if MAP in dungeon:
-                chest_type = 'dungeon'
-            else:
-                chest_type = 'outside'
-            chest_xy = chest_pos(assets,MAP)
-            chest = Chest(assets,chest_type,chest_xy)
+        if MAP in map_w_chest:
+            if len(chests) > 1:
+                for chest in chests:
+                    chest.kill()
+            chest = chest_spawn(assets,MAP,chests,player)        
             chests.add(chest)
-        
+        else:
+            for chest in chests:
+                chest.kill()
+
         map_collide = pygame.sprite.spritecollide(player,map_masks,False,pygame.sprite.collide_mask)
+        
+        hits = pygame.sprite.groupcollide(all_enemies, all_arrows, True, True, pygame.sprite.collide_mask)
+        impact = pygame.sprite.groupcollide(all_enemies,all_sprites,True,False, pygame.sprite.collide_mask)
+        item_collect = pygame.sprite.groupcollide(chests,all_sprites,True,False,pygame.sprite.collide_mask)
+        
+        if item_collect:
+            chest.open()
+            
+
         if map_collide:
             player.undo()
             print(map_collide)   
-        hits = pygame.sprite.groupcollide(all_enemies, all_arrows, True, True, pygame.sprite.collide_mask)
-        impact = pygame.sprite.groupcollide(all_enemies,all_sprites,True,False, pygame.sprite.collide_mask)
+
         window.blit(MAP,(0,0))
         
+        chests.draw(window)
         all_sprites.draw(window)
         all_arrows.draw(window)
         all_enemies.draw(window)
-        chests.draw(window)
+        
+        
+       
+        
+        if item_collect:
+            score += 100
+            assets['point'].play()
+            print(item_collect)
 
         if hits:
             assets['elemental_dying'].play()
             score += 10
+            if score%200 == 0 and health < 5:
+                health += 1
         if impact:
-            health -=1
+            health -= 1
+        
+
         #Health e Score
         text_surface = assets['score_font'].render(chr(9829) * health, True, (255, 0, 0))
         text_rect = text_surface.get_rect()
