@@ -47,7 +47,6 @@ def game_window(window):
     map_w_chest = [assets['maps']['map1.1'],assets['maps']['map2.2'],assets['maps']['map5.0'],assets['maps']['map5.2']]
     
     wave = 3 #Variável para guardar o número da wave de mobs do último mapa
-
     #Loop principal
     gamerun = RUNNING
     pygame.mixer.music.play(loops=-1)
@@ -98,6 +97,10 @@ def game_window(window):
                     elif wave == 0 and len(all_enemies) == 0:
                         gamerun = PAUSED
                 else:                       #Se o mapa for outro, não há waves   
+                            wave -= 1
+                        spawn = True
+
+                else:
                     n = random.randint(3,8)
                     for i in range(n):
                         xy = random.randint(50,400)
@@ -113,6 +116,36 @@ def game_window(window):
         all_enemies.update(player)
         
         #
+            if MAP == assets['maps']['map1.1'] or MAP == assets['maps']['map4.1']:
+                for enemy in all_enemies:
+                    enemy.kill()
+
+        if health == 0:
+            pygame.mixer.music.pause()
+            window.blit(assets['over_screen'],(0,0))
+            text_surface = assets['score_font'].render("Score:{:0d}".format(score), True, (255,255,255))
+            text_rect = text_surface.get_rect()
+            text_rect = ((WIDTH/2-125), (HEIGHT/2+15))
+            window.blit(text_surface, text_rect)
+            gamerun = PAUSED
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    map_k["map_n0"] = 1
+                    map_k["map_n1"] = 1
+                    gamerun = RUNNING
+                    health = 5
+                    score = 0
+                    window.blit(MAP,(0,0))
+                elif event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+
+        if gamerun == PAUSED:
+            pygame.display.flip()
+            continue
+
+        all_sprites.update()
+        all_enemies.update(player)
+
         MASK.kill()
         new_map = map_def(player,map_k,assets)[0]
         if new_map != MAP:
@@ -177,6 +210,20 @@ def game_window(window):
         
         
         #Desenhando Health e Score
+        if item_collect:
+            score += 100
+            assets['point'].play()
+            print(item_collect)
+
+        if hits:
+            assets['elemental_dying'].play()
+            score += 10
+            if score%200 == 0 and health < 5:
+                health += 1
+        if impact:
+            health -= 1
+        
+        #Health e Score
         text_surface = assets['score_font'].render(chr(9829) * health, True, (255, 0, 0))
         text_rect = text_surface.get_rect()
         text_rect.bottomleft = (10, HEIGHT - 10)

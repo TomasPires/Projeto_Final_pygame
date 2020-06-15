@@ -514,37 +514,25 @@ def game_window(window):
             if MAP != assets['maps']['map1.1']:
                 if MAP == assets['maps']['map6.2']:
                     if wave != 0 and len(all_enemies) == 0:
+
+
+        if spawn == True:
+            if MAP != assets['maps']['map1.1']:
+                    if MAP == assets['maps']['map6.2']:
+                        while wave != 0:
+                            if len('all_enemies') == 0:
+                                n = random.randint(3,8)
+                                for i in range(n):
+                                    xy = random.randint(50,400)
+                                    enemy = Enemy(groups, assets, player,[xy,xy])
+                                    wave -= 1
+                    else:
                         n = random.randint(3,8)
                         for i in range(n):
                             xy = random.randint(50,400)
                             enemy = Enemy(groups, assets, player,[xy,xy])
                             all_enemies.add(enemy)
-                        wave -= 1
-                    elif wave == 0 and len(all_enemies) == 0:
-                        pygame.mixer.music.pause()
-                        window.blit(assets['over_screen'],(0,0))
-                        text_surface = assets['score_font'].render("Score:{:0d}".format(score), True, (255,255,255))
-                        text_rect = text_surface.get_rect()
-                        text_rect = ((WIDTH/2-125), (HEIGHT/2+15))
-                        window.blit(text_surface, text_rect)
-                        gamerun = PAUSED
-                        if event.type == pygame.KEYDOWN:
-                            if event.key == pygame.K_RETURN:
-                                map_k["map_n0"] = 1
-                                map_k["map_n1"] = 1
-                                gamerun = RUNNING
-                                health = 5
-                                score = 0
-                                window.blit(MAP,(0,0))
-                            elif event.key == pygame.K_ESCAPE:
-                                pygame.quit() 
-                else:
-                    n = random.randint(0,0)
-                    for i in range(n):
-                        xy = random.randint(50,400)
-                        enemy = Enemy(groups, assets, player,[xy,xy])
-                        all_enemies.add(enemy)
-                    spawn = False
+                        spawn = False
 
             if MAP == assets['maps']['map1.1'] or MAP == assets['maps']['map4.1']:
                 for enemy in all_enemies:
