@@ -511,27 +511,25 @@ def game_window(window):
             if event.type == pygame.MOUSEMOTION:
                 mouse = list(pygame.mouse.get_pos())
                 print(mouse) 
-        
+
+
         if spawn == True:
             if MAP != assets['maps']['map1.1']:
-
-                if MAP == assets['maps']['map6.2']:
-                    if wave != 0 and len(all_enemies) == 0:
+                    if MAP == assets['maps']['map6.2']:
+                        while wave != 0:
+                            if len('all_enemies') == 0:
+                                n = random.randint(3,8)
+                                for i in range(n):
+                                    xy = random.randint(50,400)
+                                    enemy = Enemy(groups, assets, player,[xy,xy])
+                                    wave -= 1
+                    else:
                         n = random.randint(3,8)
                         for i in range(n):
                             xy = random.randint(50,400)
                             enemy = Enemy(groups, assets, player,[xy,xy])
                             all_enemies.add(enemy)
-                            wave -= 1
-                        spawn = True
-
-                else:
-                    n = random.randint(3,8)
-                    for i in range(n):
-                        xy = random.randint(50,400)
-                        enemy = Enemy(groups, assets, player,[xy,xy])
-                        all_enemies.add(enemy)
-                    spawn = False
+                        spawn = False
 
             if MAP == assets['maps']['map1.1'] or MAP == assets['maps']['map4.1']:
                 for enemy in all_enemies:
