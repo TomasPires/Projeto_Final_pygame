@@ -1,6 +1,6 @@
 import pygame
 from os import path
-from settings import WIDTH, HEIGHT, CHAR_SIZE, ENEMY_SIZE, CHEST_SIZE, MAP_DIR, MASK_DIR, CHAR_DIR, ENEMY_DIR, OBJECT_DIR, IMG_DIR, SOUND_DIR, BLACK, WHITE
+from settings import WIDTH, HEIGHT, CHAR_WIDTH, CHAR_HEIGHT, ENEMY_SIZE, CHEST_SIZE, MAP_DIR, MASK_DIR, CHAR_DIR, ENEMY_DIR, OBJECT_DIR, IMG_DIR, SOUND_DIR, BLACK, WHITE
 
 def load_assets():
     assets = {}
@@ -11,25 +11,25 @@ def load_assets():
     for i in range(0,8):
         filename = 'front/char0.{0}-96x96.png'.format(i)
         img = pygame.image.load(path.join(CHAR_DIR,filename)).convert_alpha()
-        img = pygame.transform.scale(img,(CHAR_SIZE, CHAR_SIZE))
+        img = pygame.transform.scale(img,(CHAR_WIDTH, CHAR_HEIGHT))
         char_front.append(img)
     char_right = []
     for i in range(0,10):
         filename = 'right/char1.{0}-96x96.png'.format(i)
         img = pygame.image.load(path.join(CHAR_DIR,filename)).convert_alpha()
-        img = pygame.transform.scale(img,(CHAR_SIZE, CHAR_SIZE))
+        img = pygame.transform.scale(img,(CHAR_WIDTH, CHAR_HEIGHT))
         char_right.append(img)
     char_back = []
     for i in range(0,8):
         filename = 'back/char2.{0}-96x96.png'.format(i)
         img = pygame.image.load(path.join(CHAR_DIR,filename)).convert_alpha()
-        img = pygame.transform.scale(img,(CHAR_SIZE, CHAR_SIZE))
+        img = pygame.transform.scale(img,(CHAR_WIDTH, CHAR_HEIGHT))
         char_back.append(img) 
     char_left = []
     for i in range(0,10):
         filename = 'left/char3.{0}-96x96.png'.format(i)
         img = pygame.image.load(path.join(CHAR_DIR,filename)).convert_alpha()
-        img = pygame.transform.scale(img,(CHAR_SIZE, CHAR_SIZE))
+        img = pygame.transform.scale(img,(CHAR_WIDTH, CHAR_HEIGHT))
         char_left.append(img)
     assets['char_front'] = char_front
     assets['char_right'] = char_right
@@ -78,42 +78,14 @@ def load_assets():
         mask.set_colorkey(BLACK)
     assets['masks'] = masks
 
-    chests = dict()
-    chest1 = dict()
-    chest2 = dict()
-    chest1['closed'] = pygame.image.load(path.join(OBJECT_DIR, 'chests/chest1closed-32x32.png')).convert()    
-    chest1['closed'] = pygame.transform.scale(chest1['closed'],(CHEST_SIZE,CHEST_SIZE))
-    chest2['closed'] = pygame.image.load(path.join(OBJECT_DIR, 'chests/chest2closed-32x32.png')).convert()    
-    chest2['closed'] = pygame.transform.scale(chest2['closed'],(CHEST_SIZE,CHEST_SIZE))
+    chest = pygame.image.load(path.join(OBJECT_DIR, 'chests/chest1closed-32x32.png')).convert()    
+    chest = pygame.transform.scale(chest,(CHEST_SIZE,CHEST_SIZE))
+    assets['chest'] = chest
 
-    
-    chest1['empty'] = pygame.image.load(path.join(OBJECT_DIR, 'chests/chest1openEMPTY-32x32.png')).convert()    
-    chest1['empty'] = pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
-    chest2['empty']= pygame.image.load(path.join(OBJECT_DIR, 'chests/chest2openEMPTY-32x32.png')).convert()    
-    chest2['empty']= pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
-
-    item1 = []
-    for i in range(1,3):
-        img = pygame.image.load(path.join(OBJECT_DIR, 'chests/chest1openFULL{0}-32x32.png'.format(i))).convert()    
-        img = pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
-        item1.append(img)
-    chest1['full'] = item1
-
-    item2 = []
-    for i in range(1,3):
-        img = pygame.image.load(path.join(OBJECT_DIR, 'chests/chest2openFULL{0}-32x32.png'.format(i))).convert()    
-        img = pygame.transform.scale(img,(CHEST_SIZE,CHEST_SIZE))
-        item1.append(img)
-    chest2['full'] = item2
-
-    chests['chest1'] = chest1
-    chests['chest2'] = chest2
-    assets['chests'] = chests
-
-    assets['init_music'] = pygame.mixer.music.load(path.join(SOUND_DIR, 'init_screen.wav'))
     assets['arrow_sound'] = pygame.mixer.Sound(path.join(SOUND_DIR, 'arrow.wav'))
     assets['elemental_dying'] = pygame.mixer.Sound(path.join(SOUND_DIR, 'dead1.wav'))
-    assets['background_music'] = pygame.mixer.music.load(path.join(SOUND_DIR, 'background.mp3'))
     assets['point'] = pygame.mixer.Sound(path.join(SOUND_DIR, 'point.wav'))
+    #assets['background_music'] = pygame.mixer.music.load(path.join(SOUND_DIR, 'background.mp3'))
+    #assets['init_music'] = pygame.mixer.music.load(path.join(SOUND_DIR, 'init_screen.wav'))
     pygame.mixer.music.set_volume(0.25)
     return assets

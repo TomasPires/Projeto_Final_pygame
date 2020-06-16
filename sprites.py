@@ -1,7 +1,7 @@
 import pygame
 import random
 from math import *
-from settings import FPS, WIDTH, HEIGHT, BLACK, RED, CHAR_SIZE,ENEMY_SIZE,CHEST_SIZE
+from settings import FPS, WIDTH, HEIGHT, BLACK, RED, CHAR_WIDTH, CHAR_HEIGHT, ENEMY_SIZE, CHEST_SIZE
 from assets import load_assets
 
 class Char(pygame.sprite.Sprite):
@@ -42,21 +42,21 @@ class Char(pygame.sprite.Sprite):
         if self.rect.bottom > HEIGHT:
             self.rect.bottom = HEIGHT
 
-        if self.deltax != 0:
-            if self.delta['right'] > 0:
+        if self.deltax != 0:               #Caso o personagem esteja se movendo, dependendo da direção é rodada uma animação
+            if self.delta['right'] > 0:  #Direita
                 self.imgkey = 'char_right'
                 self.index += 1
-            elif self.delta['left'] > 0:
+            elif self.delta['left'] > 0: #Esquerda
                 self.imgkey = 'char_left'
                 self.index += 1
-        elif self.deltay != 0 and self.deltax == 0:
+        elif self.deltay != 0 and self.deltax == 0: #Verticalmente e apenas verticalmente
             if self.delta['up'] > 0:
-                self.imgkey = 'char_back'
+                self.imgkey = 'char_back'  #Cima
                 self.index += 1
-            elif self.delta['down'] > 0:
+            elif self.delta['down'] > 0:   #Baixo
                 self.imgkey = 'char_front'
                 self.index += 1
-        elif self.deltax == 0 and self.deltay == 0:
+        elif self.deltax == 0 and self.deltay == 0: #Parado
             self.imgkey = 'char_front'
             self.index = 0
 
@@ -66,12 +66,12 @@ class Char(pygame.sprite.Sprite):
         center = self.rect.center
         self.image = self.assets[self.imgkey][self.index]
         if self.small:
-            self.image=pygame.transform.scale(self.image, (48, 48))
+            self.image=pygame.transform.scale(self.image, (41, 41))
         self.rect = self.image.get_rect()
         self.rect.center = center
 
 
-    def shoot(self):
+    def shoot(self):                       #Sempre que atira, gera uma nova flecha
         now = pygame.time.get_ticks()
         elapsed_ticks = now - self.last_shot
         if elapsed_ticks > self.shoot_ticks:
@@ -96,7 +96,7 @@ class Arrow(pygame.sprite.Sprite):
         self.rect.centerx = centerx
         self.rect.bottom = bottom
         self.speed = 15
-        mouse = list(pygame.mouse.get_pos()) 
+        mouse = list(pygame.mouse.get_pos())         #Trecho para que a flecha seja gerada e se movimente na direção do mouse
         distx = mouse[0] - self.rect.centerx
         disty = mouse[1] - self.rect.centery
         angle = atan2(disty,distx)
@@ -134,7 +134,7 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.centerx = WIDTH - pos[0]
         self.rect.centery = HEIGHT - pos[1]
         self.speed = 3
-        distax = player.rect.centerx - self.rect.centerx
+        distax = player.rect.centerx - self.rect.centerx   
         distay = player.rect.centery - self.rect.centery
         angle = atan2(distay,distax)
         self.angle = degrees(-angle)
@@ -147,7 +147,7 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.centery += self.speedy
         self.rect.centerx += self.speedx
 
-        distax = player.rect.centerx - self.rect.centerx
+        distax = player.rect.centerx - self.rect.centerx    #O inimigo se move na direção do personagem
         distay = player.rect.centery - self.rect.centery
         angle = atan2(distay,distax)
         self.angle = degrees(-angle)
@@ -167,14 +167,8 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.bottom = HEIGHT
             self.speed = 0
 
-        center = self.rect.center
-        if self.small:
-            self.image = pygame.transform.scale(self.image, (20, 20))
-        self.rect = self.image.get_rect()
-        self.rect.center = center
-
-
-class MapMask(pygame.sprite.Sprite):
+#Classe das máscaras do mapa que atualizam conforme a mudança de mapa
+class MapMask(pygame.sprite.Sprite):                
     def __init__(self,img): 
         pygame.sprite.Sprite.__init__(self)
         self.image = img
@@ -186,21 +180,14 @@ class MapMask(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
 
-class Chest(pygame.sprite.Sprite):
-    def __init__(self,assets,chest_type,chest_pos,player):
+#Classe dos baús cujas posições são definidas pelas funções chest_spawn() e chest_pos()
+class Chest(pygame.sprite.Sprite):     
+    def __init__(self,assets,chest_pos,player):             
         pygame.sprite.Sprite.__init__(self)
         self.assets = assets
-        self.type = chest_type #Recebe uma string do tipo do baú: outside(tipo 1) ou dungeon(tipo 2) 
-        self.status = 'closed' #Recebe uma sting que define o status do baú: fechado, cheio ou vazio
-        if self.type == 'outside':
-            self.key = 'chest1'
-        elif self.type == 'dungeon':
-            self.key = 'chest2'
-        self.image = self.assets['chests'][self.key][self.status]
+        self.image = self.assets['chest']
         self.rect = self.image.get_rect()
         self.rect.centerx = chest_pos[0]
         self.rect.centery = chest_pos[1]
         self.mask = pygame.mask.from_surface(self.image)
 
-    def open(self):
-        self.image = self.assets['chests'][self.key]['full'] #Troca a imagem para a do baú aberto
