@@ -135,6 +135,7 @@ def game_window(window):
                     spawn = False
 
             if MAP == assets['maps']['map1.1'] or MAP == assets['maps']['map4.1']:  # Para que os mobs não sigam o jogador, se este entrar nos mapas 1.1 ou 4.2, os mobs morrem
+                
                 for enemy in all_enemies:
                     enemy.kill()
 
@@ -201,10 +202,10 @@ def game_window(window):
             gamerun = PAUSED
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:  # Caso aperte Enter, o jogo recomeça no primeiro mapa, o estado volta pra RUNNING, a vida para 5 e os pontos zeram
-                    pygame.mixer.music.play(loops=-1)
                     for chest in chests:
-                        chest.kill
+                        chest.kill()
                     waves = 3
+                    pygame.mixer.music.play(loops=-1)
                     map_k["map_n0"] = 1
                     map_k["map_n1"] = 1
                     gamerun = RUNNING
