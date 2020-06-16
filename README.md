@@ -3,6 +3,7 @@
 TREASURES AND BURIAL
 
 Criadores: Daniel Parnes e Tomás Pires
+
 O conteúdo deste reposítorio consiste em um jogo desenvolvido em Python como projeto final do curso de Design de Software do primeiro semestre de Engenharia INSPER
 
 Treasures and Burial é um jogo estilo top-down com tema de fantasia medieval. O jogador controla um explorador em terras dominadas por elementais, com o objetivo de limpar o castelo de seus invasores. O jogador conta apenas com a habilidade de atirar flechas para que possa se defender dos inimigos. Mas cuidado para onde anda, pois os elementais não param de surgir...
