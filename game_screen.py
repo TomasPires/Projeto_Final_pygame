@@ -204,7 +204,7 @@ def game_window(window):
                 if event.key == pygame.K_RETURN:  # Caso aperte Enter, o jogo recomeça no primeiro mapa, o estado volta pra RUNNING, a vida para 5 e os pontos zeram
                     for chest in chests:
                         chest.kill()
-                    waves = 3
+                    wave = 6
                     pygame.mixer.music.play(loops=-1)
                     map_k["map_n0"] = 1
                     map_k["map_n1"] = 1
