@@ -19,7 +19,7 @@ while gamestate != CLOSE:
     if gamestate == INIT:
         gamestate = intro_screen(window)  #Tela de início 
     elif gamestate == PLAY:
-        gamestate = game_window(window)   #Tela do jogo e game ouver
+        gamestate = game_window(window)   #Tela do jogo e game over
 
 #Fecha o pygame
 pygame.quit()
